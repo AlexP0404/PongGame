@@ -4,7 +4,7 @@ Pong is the old, classic, two-player, 2D tennis game.
 
 ## Why?
 Going into my last few semesters at the University of West Florida studying computer engineering, I figured it was about time I start making some side projects that help me figure out how I work and what works for me. I know I should have done this long ago, but **late is better than never**.
-Also, I have been practicing using SDL for just a few weeks (primarily following [Lazy Foo' Productions (https://lazyfoo.net/tutorials/SDL/index.php)] tutorials). I have strayed from them a bit, figuring out how to move textures on the screen using keys and checking for intersections (2 very important things that happen in pong). I am excited for all the new things this project and my future projects will teach me!
+Also, I have been practicing using SDL for just a few weeks (primarily following [Lazy Foo' Productions](https://lazyfoo.net/tutorials/SDL/index.php) tutorials). I have strayed from them a bit, figuring out how to move textures on the screen using keys and checking for intersections (2 very important things that happen in pong). I am excited for all the new things this project and my future projects will teach me!
 
 ## Planning
 
