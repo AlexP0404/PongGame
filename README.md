@@ -8,7 +8,7 @@ Also, I have been practicing using SDL for just a few weeks (primarily following
 
 ## Planning
 
-- [ ] Create the start screen that begins the game once the user presses the start key.
+- [x] Create the start screen that begins the game once the user presses the start key.
 - [ ] Create the background with the *net* in the middle.
 - [ ] Create the scoreboard that updates automatically and ends the game once a player has reached 7 points.
 - [ ] Create the two *paddles* that each player controls (WASD for the left player and arrow keys for the right player).
@@ -18,3 +18,7 @@ Also, I have been practicing using SDL for just a few weeks (primarily following
 
 I hope to complete this before school starts next week, but with work, girlfriend, the gym, and online video games all serving as big time distractions. I do not know if I will be able to complete this goal. It is currently Tuesday 1/3/2023, and school begins on 1/9/2023, so we'll have to see. 
 I also hope I learn a lot even though it is a simple project (right now I am learning how to properly use markdown :joy:).
+
+### Notes
+
+1/4/2023 - I added a few more example code folders that will be really helpful in putting it all together. One is rendering text on the screen that can be updated automatically. Next, there is one that represents motion of a ball (with a ball texture). Finally, there are two that talk about collision between multiple textures. All of these will need deep examination before attempting to implement myself.
