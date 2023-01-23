@@ -1,17 +1,10 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_blendmode.h>
+#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_error.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_hints.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_pixels.h>
-#include <SDL2/SDL_stdinc.h>
-#include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_keycode.h>
-#include <SDL2/SDL_rect.h>
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_surface.h>
-#include <SDL2/SDL_video.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
+#include <sstream>
 #include <stdio.h>
 #include <string>
 
@@ -33,7 +26,7 @@ public:
   ~LTexture();
 
   bool loadFromFile(std::string path);
-  bool loadFromRenderedText(std::string texturedText, SDL_Color textColor);
+  bool loadFromRenderedText(std::string texturedText, SDL_Color textColor, TTF_Font* gFont);
   void free();
   void setColor(Uint8 red, Uint8 green, Uint8 blue);
   void setBlendMode(SDL_BlendMode blending);
@@ -58,10 +51,11 @@ SDL_Window* gameWindow = NULL;
 
 SDL_Renderer* gameRenderer = NULL;
 
-TTF_Font* gFont = NULL;
+TTF_Font* startFont = NULL;
+TTF_Font* tinyFont = NULL;
 
-LTexture gTextTexture;
-
+LTexture gStartPromptTexture;
+LTexture gEscPromptTexture;
 
 LTexture::LTexture(){
   mTexture = NULL;
@@ -98,7 +92,7 @@ bool LTexture::loadFromFile(std::string path){
   return mTexture != NULL;
 }
 
-bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColor )
+bool LTexture::loadFromRenderedText( std::string textureText, SDL_Color textColor, TTF_Font* gFont )
 {
 	//Get rid of preexisting texture
 	free();
@@ -233,14 +227,14 @@ bool init(){
 bool loadMedia(){
   bool success = true;
 
-  gFont = TTF_OpenFont("lazy.ttf", 30);
-  if( gFont == NULL){
+  startFont = TTF_OpenFont("lazy.ttf", 30);
+  if( startFont == NULL){
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
     success = false;
   }
   else{
     SDL_Color textColor = { 0xFF, 0xFF, 0xFF, 0xFF};
-    if(!gTextTexture.loadFromRenderedText("Press Enter to start", textColor)){
+    if(!gStartPromptTexture.loadFromRenderedText("Press Enter to start", textColor,startFont)){
       printf("Failed to render text texture!\n");
       success = false;
     }
@@ -249,10 +243,13 @@ bool loadMedia(){
 }
 
 void close(){
-  gTextTexture.free();
+  gStartPromptTexture.free();
+  gEscPromptTexture.free();
 
-  TTF_CloseFont(gFont);
-  gFont = NULL;
+  TTF_CloseFont(tinyFont);
+  TTF_CloseFont(startFont);
+  startFont = NULL;
+  tinyFont = NULL;
 
   SDL_DestroyRenderer(gameRenderer);
   SDL_DestroyWindow(gameWindow);
@@ -277,7 +274,12 @@ int main(int argc, char* args[]){
       bool start = false;
       bool lastPressedEsc = false; //you have to press esc then enter once the game started to quit
       SDL_Event e;
-      
+      SDL_Color escTextColor = {255,255,255,255};
+      std::stringstream escText;
+      tinyFont = TTF_OpenFont("lazy.ttf", 15);
+      escText.str("");
+      escText << "Press Escape to quit";
+      gEscPromptTexture.loadFromRenderedText(escText.str().c_str(), escTextColor, tinyFont);
       while(!quit){
         while(SDL_PollEvent(&e)!=0){
           if( e.type == SDL_QUIT){
@@ -291,6 +293,10 @@ int main(int argc, char* args[]){
                   break;
                 case SDLK_RETURN://enter key to start
                   start = true;
+                  escText.clear();
+                  escText.str("");
+                  escText << " ";
+                  gEscPromptTexture.loadFromRenderedText(escText.str().c_str(), escTextColor, tinyFont);
                   break;
                 default:
                   break;
@@ -300,6 +306,8 @@ int main(int argc, char* args[]){
               switch (e.key.keysym.sym) {
                 case SDLK_ESCAPE:
                   lastPressedEsc = true;
+                  escText << "Are you sure you want to quit? Press Enter again if yes.";
+                  gEscPromptTexture.loadFromRenderedText(escText.str().c_str(), escTextColor, tinyFont);
                   break;
                   //all the other cases now update lastPressedEsc to true because it wasnt pressed 2x in a row
                 case SDLK_RETURN:
@@ -317,7 +325,8 @@ int main(int argc, char* args[]){
         SDL_SetRenderDrawColor(gameRenderer, 0,0,0,0xFF);
         SDL_RenderClear(gameRenderer);
 
-        gTextTexture.render(( SCREEN_WIDTH - gTextTexture.getWidth() ) / 2, ( SCREEN_HEIGHT - gTextTexture.getHeight() ) / 2); 
+        gStartPromptTexture.render(( SCREEN_WIDTH - gStartPromptTexture.getWidth() ) / 2, ( SCREEN_HEIGHT - gStartPromptTexture.getHeight() ) / 2); 
+        gEscPromptTexture.render(0,0);
         SDL_RenderPresent(gameRenderer);
 
       }
