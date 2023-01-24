@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = main.cpp 
+OBJS = main.o dot.o gameLoop.o scoreboard.o Texture.o paddle.o 
 #CXX specifies which compiler we're using
 CXX = g++
 
@@ -15,19 +15,26 @@ INCLUDE_FLAGS = /usr/include/SDL2
 LINKER_FLAGS = -lSDL2 -lSDL2main -lSDL2_image -lSDL2_ttf -lSDL2_mixer
 
 #OBJ_NAME specifies the name of our executable
-OBJ_NAME = pong 
+OBJ_NAME = pong
+
+DEBUG_NAME = pongDebug
 #This is the target that compiles our executable
 
-dot : dot.hpp dot.cpp dot.o
-	$(CXX) $(DEBUG_FLAG) $(COMPILER_FLAGS) -I $(INCLUDE_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+pong : $(OBJS)
+	$(CXX)  $(OBJS) $(COMPILER_FLAGS) -I $(INCLUDE_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
 
 debug : $(OBJS)
-	$(CXX) $(OBJS) $(DEBUG_FLAG) $(COMPILER_FLAGS) -I $(INCLUDE_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+	$(CXX) $(OBJS) $(DEBUG_FLAG) $(COMPILER_FLAGS) -I $(INCLUDE_FLAGS) $(LINKER_FLAGS) -o $(DEBUG_NAME)
 
-all : $(OBJS)
-	$(CXX) $(OBJS) $(COMPILER_FLAGS) -I $(INCLUDE_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
+dot : dot.cpp dot.o
+gameLoop : gameLoop.cpp gameLoop.o
+scoreboard : scoreboard.cpp scoreboard.o
+paddle : paddle.cpp paddle.o
+texture : Texture.cpp Texture.o
+
+
 
 .PHONY: clean
 clean:
 	rm -rf main.dSYM
-	$(RM) *.o *.gc*  *.dSYM $(addprefix test/,$(TESTS)) core main ${CATCH}
+	$(RM) *.o *.gc*  *.dSYM pong* 

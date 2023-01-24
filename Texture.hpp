@@ -1,5 +1,5 @@
 #ifndef TEXTURE_HPP
-
+#define TEXTURE_HPP
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_image.h>

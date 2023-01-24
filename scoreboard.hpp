@@ -1,4 +1,5 @@
 #ifndef SCOREBOARD_HPP
+#define SCOREBOARD_HPP
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>

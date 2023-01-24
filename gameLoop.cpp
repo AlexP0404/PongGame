@@ -5,6 +5,7 @@ GameLoop::GameLoop(){
   gameRenderer = NULL;
   mainFont = NULL;
   escFont = NULL;
+  textColor = {0xFF, 0xFF, 0xFF, 0xFF}; 
 }
 
 GameLoop::~GameLoop(){
@@ -71,14 +72,13 @@ bool GameLoop::init(){
 bool GameLoop::loadMedia(){
   bool success = true;
 
-  mainFont = TTF_OpenFont("lazy.ttf", 30);
-  if( mainFont == NULL){
+  escFont = TTF_OpenFont("lazy.ttf", 15);
+  if( escFont == NULL){
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
     success = false;
   }
   else{
-    SDL_Color textColor = { 0xFF, 0xFF, 0xFF, 0xFF};
-    if(!startPromptTexture.loadFromRenderedText("Press Enter to start", textColor,mainFont)){
+    if(!escPromptTexture.loadFromRenderedText("Press Escape to quit", textColor,escFont)){
       printf("Failed to render text texture!\n");
       success = false;
     }
@@ -87,65 +87,65 @@ bool GameLoop::loadMedia(){
 }
 
 void GameLoop::loop(){
-bool quit = false;
-      bool start = false;
-      bool lastPressedEsc = false; //you have to press esc then enter once the game started to quit
-      SDL_Event e;
-      SDL_Color escTextColor = {255,255,255,255};
-      std::stringstream escText;
-      escFont = TTF_OpenFont("lazy.ttf", 15);
-      escText.str("");
-      escText << "Press Escape to quit";
-      escPromptTexture.loadFromRenderedText(escText.str().c_str(), escTextColor, escFont);
-      while(!quit){
-        while(SDL_PollEvent(&e)!=0){
-          if( e.type == SDL_QUIT){
-            quit = true;
-          }
-          else if(e.type == SDL_KEYDOWN){
-            if(!start){//if still at start screen
-              switch (e.key.keysym.sym) {
-                case SDLK_ESCAPE://escape key to quit
-                  quit = true;
-                  break;
-                case SDLK_RETURN://enter key to start
-                  start = true;
-                  escText.clear();
-                  escText.str("");
-                  escText << " ";
-                  escPromptTexture.loadFromRenderedText(escText.str().c_str(), escTextColor, escFont);
-                  break;
-                default:
-                  break;
-              }
-            }
-            else{//game started (now this is used for player controls)
-              switch (e.key.keysym.sym) {
-                case SDLK_ESCAPE:
-                  lastPressedEsc = true;
-                  escText << "Are you sure you want to quit? Press Enter again if yes.";
-                  escPromptTexture.loadFromRenderedText(escText.str().c_str(), escTextColor, escFont);
-                  break;
-                  //all the other cases now update lastPressedEsc to true because it wasnt pressed 2x in a row
-                case SDLK_RETURN:
-                  if(lastPressedEsc)
-                    quit = true;
-                  break;
-                default:
-                  lastPressedEsc = false;
-                  break;
-              }
-            }
+  bool quit = false;
+  bool start = false;
+  bool gameOver = false;
+  bool lastPressedEsc = false; //you have to press esc then enter once the game started to quit
+  SDL_Event e;
+  std::stringstream mainText;
+  mainFont = TTF_OpenFont("lazy.ttf", 30);
+  mainText.str("");
+  mainText << "Press Enter to start";
+  startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+  while(!quit){
+    while(SDL_PollEvent(&e)!=0){
+      if( e.type == SDL_QUIT){
+        quit = true;
+      }
+      else if(e.type == SDL_KEYDOWN){
+        if(!start){//if still at start screen
+          switch (e.key.keysym.sym) {
+            case SDLK_ESCAPE://escape key to quit
+              quit = true;
+              break;
+            case SDLK_RETURN://enter key to start
+              start = true;
+              mainText.clear();
+              mainText.str("");
+              mainText << " ";
+              startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+              break;
+            default:
+              break;
           }
         }
-        
-        SDL_SetRenderDrawColor(gameRenderer, 0,0,0,0xFF);
-        SDL_RenderClear(gameRenderer);
-
-        startPromptTexture.render(( SCREEN_WIDTH - startPromptTexture.getWidth() ) / 2, ( SCREEN_HEIGHT - startPromptTexture.getHeight() ) / 2); 
-        escPromptTexture.render(0,0);
-        SDL_RenderPresent(gameRenderer);
-
+        else{//game started (now this is used for player controls)
+          switch (e.key.keysym.sym) {
+            case SDLK_ESCAPE:
+              lastPressedEsc = true;
+              mainText << "Are you sure you want to quit? Press Enter again if yes.";
+              startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+              break;
+              //all the other cases now update lastPressedEsc to true because it wasnt pressed 2x in a row
+            case SDLK_RETURN:
+              if(lastPressedEsc)
+                quit = true;
+              break;
+            default:
+              lastPressedEsc = false;
+              break;
+          }
+        }
       }
     }
+    
+    SDL_SetRenderDrawColor(gameRenderer, 0,0,0,0xFF);
+    SDL_RenderClear(gameRenderer);
+
+    startPromptTexture.render(( SCREEN_WIDTH - startPromptTexture.getWidth() ) / 2, ( SCREEN_HEIGHT - startPromptTexture.getHeight() ) / 2); 
+    escPromptTexture.render(0,0);
+    SDL_RenderPresent(gameRenderer);
+
+  }
+}
 

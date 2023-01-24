@@ -1,5 +1,4 @@
 #include "dot.hpp"
-#include <random>
 
 Dot::Dot(){
   mPosX = 0;

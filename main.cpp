@@ -1,7 +1,8 @@
 #include <iostream>
-#include "gameLoop.hpp"
+#include "gameLoop.hpp" 
 
 int main(){
+
   GameLoop pongLoop;
   if(!pongLoop.init()){
     std::cout << "Game Loop failed to initialize!\n";

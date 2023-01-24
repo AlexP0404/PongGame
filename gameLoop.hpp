@@ -1,5 +1,5 @@
 #ifndef GAMELOOP_HPP
-
+#define GAMELOOP_HPP
 //deals with window/render initializing
 //deals with allocating/deallocating textures
 //runs the game loop and calls the other classes
@@ -33,7 +33,7 @@ class GameLoop{
     TTF_Font* escFont;
     Texture startPromptTexture;
     Texture escPromptTexture;
-
+    SDL_Color textColor;
 };
 
 #endif // !GAMELOOP_HPP
