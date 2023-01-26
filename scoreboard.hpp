@@ -6,5 +6,20 @@
 #include <SDL2/SDL_ttf.h>
 #include <string>
 
+const int SCORE_TO_WIN = 7;
+
+class Scoreboard{
+  public:
+    Scoreboard();
+    
+    std::string getScoreString();
+    bool gameOver();
+    void incPlayer1();
+    void incPlayer2();
+  
+  private:
+    int player1Score;
+    int player2Score;
+};
 
 #endif // !DEBUG

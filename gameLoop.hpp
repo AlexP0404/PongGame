@@ -27,6 +27,7 @@ class GameLoop{
     bool init();
     bool loadMedia();
     void setStartText();
+    void setScoreboardText();
     void loop();
 
   private:
@@ -38,8 +39,10 @@ class GameLoop{
     Texture textures[MAX_TEXTURES];
     Texture startPromptTexture;
     Texture escPromptTexture;
+    Texture scoreboardTexture;
     int numActiveTextures;
     SDL_Color textColor;
+    Scoreboard sb;
 };
 
 #endif // !GAMELOOP_HPP

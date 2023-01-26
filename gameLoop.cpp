@@ -1,4 +1,5 @@
 #include "gameLoop.hpp"
+#include "scoreboard.hpp"
 
 GameLoop::GameLoop(){
   numActiveTextures = 0;
@@ -10,8 +11,12 @@ GameLoop::GameLoop(){
 }
 
 GameLoop::~GameLoop(){
+  for(auto i : textures){
+    i.free();
+  }
   startPromptTexture.free();
   escPromptTexture.free();
+  scoreboardTexture.free();
 
   TTF_CloseFont(mainFont);
   TTF_CloseFont(escFont);
@@ -82,17 +87,28 @@ bool GameLoop::loadMedia(){
       printf("Failed to render text texture!\n");
       success = false;
     }
-    escPromptTexture.setxCoor(0);
-    escPromptTexture.setyCoor(0);
-    textures[numActiveTextures] = escPromptTexture;
-    numActiveTextures++;
-    mainFont = TTF_OpenFont("lazy.ttf", 30);
-    mainText.str("");
-    mainText << "Press Enter to start";
-    startPromptTexture.setRenderer(*gameRenderer);
-    setStartText();
+    else {
+      escPromptTexture.setxCoor(0);
+      escPromptTexture.setyCoor(0);
+      textures[numActiveTextures] = escPromptTexture;
+      numActiveTextures++;
+
+      mainFont = TTF_OpenFont("lazy.ttf", 30);
+      mainText.str("");
+      mainText << "Press Enter to start";
+      startPromptTexture.setRenderer(*gameRenderer);
+      setStartText();
+
+      scoreboardTexture.setRenderer(*gameRenderer);
+    }
   }
   return success;
+}
+
+void GameLoop::setScoreboardText(){
+  scoreboardTexture.loadFromRenderedText(sb.getScoreString().c_str(), textColor, mainFont);
+  scoreboardTexture.setxCoor((SCREEN_WIDTH - scoreboardTexture.getWidth()) / 2);//center
+  scoreboardTexture.setyCoor(150);// more towards the top of the screen
 }
 
 void GameLoop::setStartText(){//sets the large MAIN  text to the current mainText string and adds the texture to the list of active textures
@@ -109,6 +125,7 @@ void GameLoop::renderTextures(){
   
   for(int i = 0; i < numActiveTextures; i++){
     textures[i].render();
+    //std::cout << i << " ";//prints the indexes of the textures as they are being rendered
   }
   SDL_RenderPresent(gameRenderer);
   
@@ -120,7 +137,9 @@ void GameLoop::loop(){
   bool start = false;
   bool gameOver = false;
   bool lastPressedEsc = false; //you have to press esc then enter once the game started to quit
-  
+  bool sbTextureLoaded = false;
+  setScoreboardText();
+
   SDL_Event e;
   
   while(!quit){
@@ -144,7 +163,7 @@ void GameLoop::loop(){
               break;
           }
         }
-        else{//game started (now this is used for player controls)
+        else{//game started (now this is used for player controls) start = true
           switch (e.key.keysym.sym) {
             case SDLK_ESCAPE:
               if(lastPressedEsc)
@@ -161,13 +180,26 @@ void GameLoop::loop(){
                 quit = true;
               break;
             default:
-              numActiveTextures--;
-              lastPressedEsc = false;
+              /*sb.incPlayer1();
+              setScoreboardText(); //this is somewhat how the scoreboard is gonna be used and updated 
+              sbTextureLoaded = false;*/
+              if(lastPressedEsc){
+                numActiveTextures--;
+                lastPressedEsc = false;
+              }
               break;
           }
         }
       }
     }
+
+    if(start && !sbTextureLoaded){
+      sbTextureLoaded = true;
+      textures[numActiveTextures] = scoreboardTexture;
+      numActiveTextures++;
+      //std::cout << "After the start texture the next index is: " << numActiveTextures << std::endl;
+    }
+
     if(numActiveTextures <= 0){    
       textures[0] = escPromptTexture;//if somehow accidentally deleted too many from the array, keep at least the escape prompt
       numActiveTextures = 1; 
