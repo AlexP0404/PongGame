@@ -16,23 +16,29 @@
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 960;
+const int MAX_TEXTURES = 100;
 
 class GameLoop{
   public:
     GameLoop();
     ~GameLoop();
-  
+    
+    void renderTextures();
     bool init();
     bool loadMedia();
+    void setStartText();
     void loop();
 
   private:
+    std::stringstream mainText;
     SDL_Window* gameWindow;
     SDL_Renderer* gameRenderer;
     TTF_Font* mainFont;
     TTF_Font* escFont;
+    Texture textures[MAX_TEXTURES];
     Texture startPromptTexture;
     Texture escPromptTexture;
+    int numActiveTextures;
     SDL_Color textColor;
 };
 

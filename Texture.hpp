@@ -11,7 +11,7 @@
 class Texture{
 public:
   Texture();
-  Texture(SDL_Renderer& renderer);
+  Texture(SDL_Renderer& renderer, int xCoor, int yCoor);
   ~Texture();
   
   void setRenderer(SDL_Renderer& renderer);
@@ -21,14 +21,20 @@ public:
   void setColor(Uint8 red, Uint8 green, Uint8 blue);
   void setBlendMode(SDL_BlendMode blending);
   void setAlpha(Uint8 alpha);
-  void render(int x, int y, SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE) ;
+  void render(SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE) ;
   int getWidth();
   int getHeight();
+  int getxCoor();
+  int getyCoor();
+  void setxCoor(int x);
+  void setyCoor(int y);
 
 private:
   SDL_Texture* mTexture;
   int mWidth;
   int mHeight;
+  int xCoor;
+  int yCoor;
   SDL_Renderer* gameRenderer;
 };
 #endif // !TEXTURE_HPP

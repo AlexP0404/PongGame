@@ -1,6 +1,7 @@
 #include "gameLoop.hpp"
 
 GameLoop::GameLoop(){
+  numActiveTextures = 0;
   gameWindow = NULL;
   gameRenderer = NULL;
   mainFont = NULL;
@@ -51,8 +52,6 @@ bool GameLoop::init(){
       }
       else{
         SDL_SetRenderDrawColor(gameRenderer, 0x00,0x00,0x00,0xFF);
-        startPromptTexture.setRenderer(*gameRenderer);
-        escPromptTexture.setRenderer(*gameRenderer);
         int imgFlags = IMG_INIT_PNG;
         if(!(IMG_Init(imgFlags) & imgFlags)){
           printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
@@ -78,25 +77,52 @@ bool GameLoop::loadMedia(){
     success = false;
   }
   else{
+    escPromptTexture.setRenderer(*gameRenderer);
     if(!escPromptTexture.loadFromRenderedText("Press Escape to quit", textColor,escFont)){
       printf("Failed to render text texture!\n");
       success = false;
     }
+    escPromptTexture.setxCoor(0);
+    escPromptTexture.setyCoor(0);
+    textures[numActiveTextures] = escPromptTexture;
+    numActiveTextures++;
+    mainFont = TTF_OpenFont("lazy.ttf", 30);
+    mainText.str("");
+    mainText << "Press Enter to start";
+    startPromptTexture.setRenderer(*gameRenderer);
+    setStartText();
   }
   return success;
 }
 
+void GameLoop::setStartText(){//sets the large MAIN  text to the current mainText string and adds the texture to the list of active textures
+  startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+  startPromptTexture.setxCoor(( SCREEN_WIDTH - startPromptTexture.getWidth() ) / 2);
+  startPromptTexture.setyCoor(( SCREEN_HEIGHT - startPromptTexture.getHeight() ) / 2);
+  textures[numActiveTextures] = startPromptTexture;
+  numActiveTextures++;
+}
+
+void GameLoop::renderTextures(){
+  SDL_SetRenderDrawColor(gameRenderer, 0,0,0,0xFF);
+  SDL_RenderClear(gameRenderer);
+  
+  for(int i = 0; i < numActiveTextures; i++){
+    textures[i].render();
+  }
+  SDL_RenderPresent(gameRenderer);
+  
+}
+
 void GameLoop::loop(){
+  
   bool quit = false;
   bool start = false;
   bool gameOver = false;
   bool lastPressedEsc = false; //you have to press esc then enter once the game started to quit
+  
   SDL_Event e;
-  std::stringstream mainText;
-  mainFont = TTF_OpenFont("lazy.ttf", 30);
-  mainText.str("");
-  mainText << "Press Enter to start";
-  startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+  
   while(!quit){
     while(SDL_PollEvent(&e)!=0){
       if( e.type == SDL_QUIT){
@@ -112,8 +138,7 @@ void GameLoop::loop(){
               start = true;
               mainText.clear();
               mainText.str("");
-              mainText << " ";
-              startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+              numActiveTextures--;
               break;
             default:
               break;
@@ -122,9 +147,13 @@ void GameLoop::loop(){
         else{//game started (now this is used for player controls)
           switch (e.key.keysym.sym) {
             case SDLK_ESCAPE:
+              if(lastPressedEsc)
+                break;
               lastPressedEsc = true;
-              mainText << "Are you sure you want to quit? Press Enter again if yes.";
-              startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+              mainText << "Are you sure you want to quit? Press Enter if yes.";
+              setStartText();
+              mainText.clear();
+              mainText.str("");
               break;
               //all the other cases now update lastPressedEsc to true because it wasnt pressed 2x in a row
             case SDLK_RETURN:
@@ -132,19 +161,18 @@ void GameLoop::loop(){
                 quit = true;
               break;
             default:
+              numActiveTextures--;
               lastPressedEsc = false;
               break;
           }
         }
       }
     }
-    
-    SDL_SetRenderDrawColor(gameRenderer, 0,0,0,0xFF);
-    SDL_RenderClear(gameRenderer);
-
-    startPromptTexture.render(( SCREEN_WIDTH - startPromptTexture.getWidth() ) / 2, ( SCREEN_HEIGHT - startPromptTexture.getHeight() ) / 2); 
-    escPromptTexture.render(0,0);
-    SDL_RenderPresent(gameRenderer);
+    if(numActiveTextures <= 0){    
+      textures[0] = escPromptTexture;//if somehow accidentally deleted too many from the array, keep at least the escape prompt
+      numActiveTextures = 1; 
+    }
+    renderTextures();
 
   }
 }
