@@ -1,5 +1,4 @@
 #include "gameLoop.hpp"
-#include "scoreboard.hpp"
 
 GameLoop::GameLoop(){
   numActiveTextures = 0;
@@ -111,6 +110,13 @@ void GameLoop::setScoreboardText(){
   scoreboardTexture.setyCoor(150);// more towards the top of the screen
 }
 
+void GameLoop::drawNet(){
+  SDL_SetRenderDrawColor(gameRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+  for(int i = 0; i < SCREEN_HEIGHT; i +=4){
+    SDL_RenderDrawPoint(gameRenderer, SCREEN_WIDTH / 2, i);
+  }
+}
+
 void GameLoop::setStartText(){//sets the large MAIN  text to the current mainText string and adds the texture to the list of active textures
   startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
   startPromptTexture.setxCoor(( SCREEN_WIDTH - startPromptTexture.getWidth() ) / 2);
@@ -127,7 +133,6 @@ void GameLoop::renderTextures(){
     textures[i].render();
     //std::cout << i << " ";//prints the indexes of the textures as they are being rendered
   }
-  SDL_RenderPresent(gameRenderer);
   
 }
 
@@ -179,6 +184,15 @@ void GameLoop::loop(){
               if(lastPressedEsc)
                 quit = true;
               break;
+            case SDLK_w://start of the player controls
+
+              break;
+            case SDLK_s:
+              break;
+            case SDLK_UP:
+              break;
+            case SDLK_DOWN:
+              break;
             default:
               /*sb.incPlayer1();
               setScoreboardText(); //this is somewhat how the scoreboard is gonna be used and updated 
@@ -192,6 +206,7 @@ void GameLoop::loop(){
         }
       }
     }
+    
 
     if(start && !sbTextureLoaded){
       sbTextureLoaded = true;
@@ -205,6 +220,9 @@ void GameLoop::loop(){
       numActiveTextures = 1; 
     }
     renderTextures();
+    if(start && !lastPressedEsc)
+      drawNet();
+    SDL_RenderPresent(gameRenderer);
 
   }
 }

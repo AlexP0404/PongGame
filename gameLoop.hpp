@@ -27,6 +27,7 @@ class GameLoop{
     bool init();
     bool loadMedia();
     void setStartText();
+    void drawNet();
     void setScoreboardText();
     void loop();
 
