@@ -11,7 +11,7 @@ Also, I have been practicing using SDL for just a few weeks (primarily following
 - [x] Create the start screen that begins the game once the user presses the start key.
 - [x] Create the background with the *net* in the middle.
 - [x] Create the scoreboard that updates automatically and ends the game once a player has reached 7 points.
-- [ ] Create the two *paddles* that each player controls (WASD for the left player and arrow keys for the right player).
+- [ ] Create the two *paddles* that each player controls (WS for the left player and arrow keys for the right player).
 - [ ] Create the ball that moves across the screen and either intersects with the top screen boarders and bounces, the players' paddles and bounces, or the players' *goals* and updates the scoreboard and resets to the center.
 
 ## Goals
