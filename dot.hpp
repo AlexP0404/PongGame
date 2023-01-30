@@ -2,6 +2,7 @@
 #define DOT_HPP
 #include <iostream>
 #include <random>
+#include <time.h>
 //dot needs to move on its own
 //INITIALLY: moves in random direction slowly.
 //when a collision is detected: bounce() needs to do some math to figure out the direction it goes next
@@ -16,15 +17,17 @@ class Dot
     static const int MAX_DOT_VEL = 10;
 
     Dot();
-    void bounce(char wall);//needs to handle bouncing off top and bottom walls and paddles
+    void bounce(bool isBouncePaddle);//needs to handle bouncing off top and bottom walls and paddles
                   //how to handle bounce?
     void set();
     void move();//move faster the longer it goes without resetting (scoring)
     void render();//this will likely have to be made in the gameloop
+    void setScreen(int h, int w);
     int getPosX();
     int getPosY();
 
   private:
+    int screenHeight, screenWidth;
     int directionX, directionY;
     int currVel;
     int mPosX, mPosY;

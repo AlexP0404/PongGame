@@ -20,6 +20,7 @@ const int SCREEN_HEIGHT = 960;
 const int MAX_TEXTURES = 100;
 const int PADDLE_WIDTH = 20;
 const int PADDLE_HEIGHT = 100;
+const int PADDLE_OFFSET = 100;
 
 class GameLoop{
   public:
@@ -29,10 +30,12 @@ class GameLoop{
     void renderTextures();
     bool init();
     bool loadMedia();
+    bool collision();
+    bool score();
     void setStartText();
     void drawNet();
     void setScoreboardText();
-    void initPaddles();
+    void drawDot();
     void drawPaddles();
     void loop();
 
@@ -46,14 +49,18 @@ class GameLoop{
     Texture startPromptTexture;
     Texture escPromptTexture;
     Texture scoreboardTexture;
-    Texture dotTexture;
     int numActiveTextures;
     SDL_Color textColor;
+    Dot dot;
     Scoreboard sb;
     Paddle p1;
     Paddle p2;
     SDL_Rect p1Rect;
     SDL_Rect p2Rect;
+    SDL_Rect dotRect;
+    bool bounceOffPaddle;
+    bool p1Scored;
+    bool p1Wins;
     Mix_Chunk *bounce = NULL;
 };
 

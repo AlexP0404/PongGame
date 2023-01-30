@@ -13,6 +13,7 @@ class Scoreboard{
     Scoreboard();
     
     std::string getScoreString();
+    void reset();
     bool gameOver();
     void incPlayer1();
     void incPlayer2();

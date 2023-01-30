@@ -6,6 +6,11 @@ Scoreboard::Scoreboard(){
   player2Score = 0;
 }
 
+void Scoreboard::reset(){
+  player1Score = 0;
+  player2Score = 0;
+}
+
 std::string Scoreboard::getScoreString(){
   return std::to_string(player1Score) + "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t" + std::to_string(player2Score); 
 }

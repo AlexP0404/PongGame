@@ -8,6 +8,9 @@ GameLoop::GameLoop(){
   gameRenderer = NULL;
   mainFont = NULL;
   escFont = NULL;
+  bounceOffPaddle = false;
+  p1Scored = false;
+  p1Wins = false;
   textColor = {0xFF, 0xFF, 0xFF, 0xFF};
 }
 
@@ -114,6 +117,7 @@ bool GameLoop::loadMedia(){
 
       scoreboardTexture.setRenderer(*gameRenderer);
       
+      dot.setScreen(SCREEN_HEIGHT, SCREEN_WIDTH);
       bounce = Mix_LoadWAV("bounce.wav");
       if(bounce == NULL){
         printf("Failed to load bounce sound effect! SDL_mixer Error: %s\n", Mix_GetError());
@@ -138,18 +142,23 @@ void GameLoop::setStartText(){//sets the large MAIN  text to the current mainTex
   numActiveTextures++;
 }
 
-void GameLoop::drawPaddles(){
-  p1Rect = { 100, p1.getPos(), PADDLE_WIDTH, PADDLE_HEIGHT};//initialize the first paddle in the middle left of the screen
-  p2Rect = { SCREEN_WIDTH - 100, p2.getPos() , PADDLE_WIDTH, PADDLE_HEIGHT};
-  SDL_RenderFillRect(gameRenderer, &p1Rect);
-  SDL_RenderFillRect(gameRenderer, &p2Rect);
-}
-
 void GameLoop::drawNet(){
   SDL_SetRenderDrawColor(gameRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
   for(int i = 0; i < SCREEN_HEIGHT; i +=4){
     SDL_RenderDrawPoint(gameRenderer, SCREEN_WIDTH / 2, i);
   }
+}
+
+void GameLoop::drawPaddles(){
+  p1Rect = { PADDLE_OFFSET, p1.getPos(), PADDLE_WIDTH, PADDLE_HEIGHT};//initialize the first paddle in the middle left of the screen
+  p2Rect = { SCREEN_WIDTH - PADDLE_OFFSET, p2.getPos() , PADDLE_WIDTH, PADDLE_HEIGHT};
+  SDL_RenderFillRect(gameRenderer, &p1Rect);
+  SDL_RenderFillRect(gameRenderer, &p2Rect);
+}
+
+void GameLoop::drawDot(){
+  dotRect = {dot.getPosX(), dot.getPosY(), dot.DOT_WIDTH, dot.DOT_HEIGHT};
+  SDL_RenderFillRect(gameRenderer, &dotRect);
 }
 
 void GameLoop::renderTextures(){
@@ -160,7 +169,40 @@ void GameLoop::renderTextures(){
     textures[i].render();
     //std::cout << i << " ";//prints the indexes of the textures as they are being rendered
   }
-  
+}
+
+bool GameLoop::collision(){
+  if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
+    if(dot.getPosY() >= p1.getPos() && dot.getPosY() <= p1.getPos() + PADDLE_HEIGHT){
+      bounceOffPaddle = true;
+      return true;
+    }
+  }
+  if(dot.getPosX() >= SCREEN_WIDTH - PADDLE_OFFSET && dot.getPosX() <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
+    if(dot.getPosY() >= p2.getPos() && dot.getPosY() <= p2.getPos() + PADDLE_HEIGHT){
+      bounceOffPaddle = true;
+      return true;
+    }
+  }
+
+  if(dot.getPosY() >= SCREEN_HEIGHT || dot.getPosY() <= 0){//bounce off top or bottom walls
+    bounceOffPaddle = false;
+    return true;
+  }
+
+  return false;
+}
+
+bool GameLoop::score(){
+  if(dot.getPosX() <= 0){
+    p1Scored = false;//p2 scored on p1
+    return true;
+  }
+  if(dot.getPosX() >= SCREEN_WIDTH){
+    p1Scored = true;
+    return true;
+  }
+  return false;
 }
 
 void GameLoop::loop(){
@@ -187,9 +229,11 @@ void GameLoop::loop(){
               break;
             case SDLK_RETURN://enter key to start
               start = true;
+              sb.reset();
               mainText.clear();
               mainText.str("");
               numActiveTextures--;
+              dot.set();
               break;
             default:
               break;
@@ -237,7 +281,17 @@ void GameLoop::loop(){
         }
       }
     }
-    
+    if(gameOver){
+      SDL_RenderClear(gameRenderer);
+      start = false;
+      if(p1Wins)
+        mainText << "Player 1 Wins!!! Press Enter to start again!";
+      else
+        mainText << "Player 2 Wins!!! Press Enter to start again!";
+      setStartText();
+      mainText.clear();
+      mainText.str("");
+    } 
 
     if(start && !sbTextureLoaded){
       sbTextureLoaded = true;
@@ -252,8 +306,25 @@ void GameLoop::loop(){
     }
     renderTextures();
     if(start && !lastPressedEsc){
+      dot.move();
+      if(collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
+        dot.bounce(bounceOffPaddle);
+        Mix_PlayChannel(-1, bounce, 0);
+      }
+      else if(score()){//this needs to compare the position of the dot and the paddles and check if it scored.  
+                       //if it did score, figure out which player scored and increment the score then call scoreboard.gameOver() to check if the game is over
+        if(p1Scored)
+          sb.incPlayer1();
+        else
+          sb.incPlayer2();
+        setScoreboardText();
+        sbTextureLoaded = false;
+        gameOver = sb.gameOver();
+        dot.set();
+      }
       drawNet();
       drawPaddles();
+      drawDot();
     }
     SDL_RenderPresent(gameRenderer);
 

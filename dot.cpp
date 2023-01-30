@@ -1,6 +1,7 @@
 #include "dot.hpp"
 
 Dot::Dot(){
+  srandom(time(NULL));
   mPosX = 0;
   mPosY = 0;
   
@@ -12,42 +13,63 @@ Dot::Dot(){
   directionY = 0;
 }
 
-void Dot::bounce(char wall){//this is gonna be the hardest part
+void Dot::bounce(bool isBouncePaddle){//this is gonna be the hardest part
   //orthogonal to the direction and the wall/paddle?
-  wall = 'a';
+  //if bouncing off left/right wall
+  //  directionX = -directionX
+  //if bouncing off up/down wall
+  //  directionY = -directionY
+  if(isBouncePaddle){
+    directionX = -directionX;
+  }
+  else{
+    directionY = -directionY;
+  }
+
+  mVelX *= directionX;
+  mVelY *= directionY;
+}
+
+void Dot::setScreen(int h, int w){
+  screenHeight = h;
+  screenWidth = w;
+}
+
+bool genRandom(){
+  return (rand() % 10 > 5);//if it is 
 }
 
 void Dot::set(){//starts the dot out slowly in a random direction (probably lean more towards the players)
+  mPosX = screenWidth / 2;
+  mPosY = screenHeight / 2;
+
   currVel = 1;
-  double lowerBnd = -1;
-  double upperBnd = 1;
-  std::uniform_int_distribution<int> unif(lowerBnd,upperBnd);
-  std::default_random_engine re;
   
-  directionX = unif(re);//should give two random directional values from -1 to 1
-  directionY = unif(re);
+  directionX = (genRandom()) ? 1 : -1;//if true, positive, else negative
+  directionY = (genRandom()) ? 1 : -1;
 
   std::cout << directionX << ',' << directionY << std::endl; 
 }
 
 void Dot::move(){//updates where the ball is on the screen
                  //after this is updated in the loop, check for any collisions
-  if(currVel <= MAX_DOT_VEL)
-    currVel++;//this might be too fast 
   //I want to move the ball at the current velocity (speed) in the proper direction
   //how to deal with all other angles besides 0,45,90,135,180,225,270,315, and 360
   //double? 
-  mVelX += currVel * directionX;
-  mVelY += currVel * directionY;
+  if(mVelX < MAX_DOT_VEL)
+    mVelX += currVel * directionX;
+  if(mVelY < MAX_DOT_VEL)
+    mVelY += currVel * directionY;
 
-  mPosX += mVelX;
-  mPosY += mVelY;
+  //std::cout << mVelX << " ";
+  mPosX += mVelX / 100;
+  mPosY += mVelY / 100;
 }
 
 int Dot::getPosX(){
-  return int(mPosX);
+  return mPosX;
 } 
 
 int Dot::getPosY(){
-  return int(mPosY);
+  return mPosY;
 }
