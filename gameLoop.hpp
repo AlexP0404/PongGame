@@ -6,6 +6,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_mixer.h>
 #include "Texture.hpp"
 #include "dot.hpp"
 #include "paddle.hpp"
@@ -17,6 +18,8 @@
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 960;
 const int MAX_TEXTURES = 100;
+const int PADDLE_WIDTH = 20;
+const int PADDLE_HEIGHT = 100;
 
 class GameLoop{
   public:
@@ -29,6 +32,8 @@ class GameLoop{
     void setStartText();
     void drawNet();
     void setScoreboardText();
+    void initPaddles();
+    void drawPaddles();
     void loop();
 
   private:
@@ -41,9 +46,15 @@ class GameLoop{
     Texture startPromptTexture;
     Texture escPromptTexture;
     Texture scoreboardTexture;
+    Texture dotTexture;
     int numActiveTextures;
     SDL_Color textColor;
     Scoreboard sb;
+    Paddle p1;
+    Paddle p2;
+    SDL_Rect p1Rect;
+    SDL_Rect p2Rect;
+    Mix_Chunk *bounce = NULL;
 };
 
 #endif // !GAMELOOP_HPP

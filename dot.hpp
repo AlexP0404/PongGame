@@ -1,8 +1,6 @@
 #ifndef DOT_HPP
 #define DOT_HPP
 #include <iostream>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 #include <random>
 //dot needs to move on its own
 //INITIALLY: moves in random direction slowly.

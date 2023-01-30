@@ -1,4 +1,6 @@
 #include "gameLoop.hpp"
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_render.h>
 
 GameLoop::GameLoop(){
   numActiveTextures = 0;
@@ -6,7 +8,7 @@ GameLoop::GameLoop(){
   gameRenderer = NULL;
   mainFont = NULL;
   escFont = NULL;
-  textColor = {0xFF, 0xFF, 0xFF, 0xFF}; 
+  textColor = {0xFF, 0xFF, 0xFF, 0xFF};
 }
 
 GameLoop::~GameLoop(){
@@ -22,11 +24,15 @@ GameLoop::~GameLoop(){
   mainFont = NULL;
   escFont = NULL;
 
+  Mix_FreeChunk(bounce);
+  bounce = NULL;
+
   SDL_DestroyRenderer(gameRenderer);
   SDL_DestroyWindow(gameWindow);
   gameWindow = NULL;
   gameRenderer = NULL;
-
+  
+  Mix_Quit();
   TTF_Quit();
   IMG_Quit();
   SDL_Quit();
@@ -34,8 +40,13 @@ GameLoop::~GameLoop(){
 
 bool GameLoop::init(){
   bool success = true;
+  
+  p1.setScreenHeight(SCREEN_HEIGHT);
+  p2.setScreenHeight(SCREEN_HEIGHT);
+  p1.setPos(SCREEN_HEIGHT / 2);
+  p2.setPos(SCREEN_HEIGHT / 2);
 
-  if(SDL_Init(SDL_INIT_VIDEO) < 0){
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0){
     printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
     success = false;
   }
@@ -61,7 +72,10 @@ bool GameLoop::init(){
           printf("SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError());
           success = false;
         }
-
+        if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0){
+          printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError());
+          success = false;
+        }
         if(TTF_Init() == -1){
           printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError());
           success = false;
@@ -99,6 +113,12 @@ bool GameLoop::loadMedia(){
       setStartText();
 
       scoreboardTexture.setRenderer(*gameRenderer);
+      
+      bounce = Mix_LoadWAV("bounce.wav");
+      if(bounce == NULL){
+        printf("Failed to load bounce sound effect! SDL_mixer Error: %s\n", Mix_GetError());
+        success = false;
+      }
     }
   }
   return success;
@@ -110,19 +130,26 @@ void GameLoop::setScoreboardText(){
   scoreboardTexture.setyCoor(150);// more towards the top of the screen
 }
 
-void GameLoop::drawNet(){
-  SDL_SetRenderDrawColor(gameRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  for(int i = 0; i < SCREEN_HEIGHT; i +=4){
-    SDL_RenderDrawPoint(gameRenderer, SCREEN_WIDTH / 2, i);
-  }
-}
-
 void GameLoop::setStartText(){//sets the large MAIN  text to the current mainText string and adds the texture to the list of active textures
   startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
   startPromptTexture.setxCoor(( SCREEN_WIDTH - startPromptTexture.getWidth() ) / 2);
   startPromptTexture.setyCoor(( SCREEN_HEIGHT - startPromptTexture.getHeight() ) / 2);
   textures[numActiveTextures] = startPromptTexture;
   numActiveTextures++;
+}
+
+void GameLoop::drawPaddles(){
+  p1Rect = { 100, p1.getPos(), PADDLE_WIDTH, PADDLE_HEIGHT};//initialize the first paddle in the middle left of the screen
+  p2Rect = { SCREEN_WIDTH - 100, p2.getPos() , PADDLE_WIDTH, PADDLE_HEIGHT};
+  SDL_RenderFillRect(gameRenderer, &p1Rect);
+  SDL_RenderFillRect(gameRenderer, &p2Rect);
+}
+
+void GameLoop::drawNet(){
+  SDL_SetRenderDrawColor(gameRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+  for(int i = 0; i < SCREEN_HEIGHT; i +=4){
+    SDL_RenderDrawPoint(gameRenderer, SCREEN_WIDTH / 2, i);
+  }
 }
 
 void GameLoop::renderTextures(){
@@ -185,15 +212,19 @@ void GameLoop::loop(){
                 quit = true;
               break;
             case SDLK_w://start of the player controls
-
+              p1.handleEvent(true);
               break;
             case SDLK_s:
+              p1.handleEvent(false);
               break;
             case SDLK_UP:
+              p2.handleEvent(true);
               break;
             case SDLK_DOWN:
+              p2.handleEvent(false);
               break;
             default:
+              //Mix_PlayChannel(-1, bounce, 0); //this will be called along with the dot.bounce() function
               /*sb.incPlayer1();
               setScoreboardText(); //this is somewhat how the scoreboard is gonna be used and updated 
               sbTextureLoaded = false;*/
@@ -220,8 +251,10 @@ void GameLoop::loop(){
       numActiveTextures = 1; 
     }
     renderTextures();
-    if(start && !lastPressedEsc)
+    if(start && !lastPressedEsc){
       drawNet();
+      drawPaddles();
+    }
     SDL_RenderPresent(gameRenderer);
 
   }
