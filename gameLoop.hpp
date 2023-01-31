@@ -61,6 +61,7 @@ class GameLoop{
     bool bounceOffPaddle;
     bool p1Scored;
     bool p1Wins;
+    int framesSinceCollision;
     Mix_Chunk *bounce = NULL;
 };
 

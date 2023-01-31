@@ -1,9 +1,11 @@
 #include "gameLoop.hpp"
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_render.h>
+#include <iostream>
 
 GameLoop::GameLoop(){
   numActiveTextures = 0;
+  framesSinceCollision = 0;
   gameWindow = NULL;
   gameRenderer = NULL;
   mainFont = NULL;
@@ -172,21 +174,33 @@ void GameLoop::renderTextures(){
 }
 
 bool GameLoop::collision(){
-  if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
-    if(dot.getPosY() >= p1.getPos() && dot.getPosY() <= p1.getPos() + PADDLE_HEIGHT){
+  if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH + 2 && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
+    if(dot.getPosY() >= p1.getPos() - dot.DOT_HEIGHT && dot.getPosY() <= p1.getPos() + PADDLE_HEIGHT){
+      if(!bounceOffPaddle)
+        framesSinceCollision = 0;
       bounceOffPaddle = true;
       return true;
     }
   }
-  if(dot.getPosX() >= SCREEN_WIDTH - PADDLE_OFFSET && dot.getPosX() <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
-    if(dot.getPosY() >= p2.getPos() && dot.getPosY() <= p2.getPos() + PADDLE_HEIGHT){
+  if(dot.getPosX() >= SCREEN_WIDTH - PADDLE_OFFSET + 2 && dot.getPosX() <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
+    if(dot.getPosY() >= p2.getPos() - dot.DOT_HEIGHT && dot.getPosY() <= p2.getPos() + PADDLE_HEIGHT){
+      if(!bounceOffPaddle)
+        framesSinceCollision = 0;
       bounceOffPaddle = true;
       return true;
     }
   }
 
-  if(dot.getPosY() >= SCREEN_HEIGHT || dot.getPosY() <= 0){//bounce off top or bottom walls
+  if(dot.getPosY() + dot.DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < 0/*dot.DOT_HEIGHT*/){//bounce off top or bottom walls
+    //std::cout << dot.getPosY() << " ";
+
+    if(dot.getPosY() > SCREEN_HEIGHT / 2)//on the bottom half of the screen
+      dot.setPosY(dot.getPosY() - 2);
+    else
+      dot.setPosY(dot.getPosY() + 2);
+
     bounceOffPaddle = false;
+    //framesSinceCollision = 0;
     return true;
   }
 
@@ -288,6 +302,8 @@ void GameLoop::loop(){
         mainText << "Player 1 Wins!!! Press Enter to start again!";
       else
         mainText << "Player 2 Wins!!! Press Enter to start again!";
+      numActiveTextures = 1;
+      sbTextureLoaded = false;
       setStartText();
       mainText.clear();
       mainText.str("");
@@ -307,11 +323,15 @@ void GameLoop::loop(){
     renderTextures();
     if(start && !lastPressedEsc){
       dot.move();
-      if(collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
+      if(framesSinceCollision > 60 && collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
+        //std::cout << dot.getPosX() << ',' << dot.getPosY() << " ";
         dot.bounce(bounceOffPaddle);
         Mix_PlayChannel(-1, bounce, 0);
       }
-      else if(score()){//this needs to compare the position of the dot and the paddles and check if it scored.  
+      else{
+        framesSinceCollision++;
+      }
+      if(score()){//this needs to compare the position of the dot and the paddles and check if it scored.  
                        //if it did score, figure out which player scored and increment the score then call scoreboard.gameOver() to check if the game is over
         if(p1Scored)
           sb.incPlayer1();

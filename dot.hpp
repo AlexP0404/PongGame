@@ -14,7 +14,7 @@ class Dot
     static const int DOT_WIDTH = 20;
     static const int DOT_HEIGHT = 20;
     
-    static const int MAX_DOT_VEL = 10;
+    static const int MAX_DOT_VEL = 2;
 
     Dot();
     void bounce(bool isBouncePaddle);//needs to handle bouncing off top and bottom walls and paddles
@@ -25,11 +25,11 @@ class Dot
     void setScreen(int h, int w);
     int getPosX();
     int getPosY();
+    void setPosY(int y);
 
   private:
     int screenHeight, screenWidth;
     int directionX, directionY;
-    int currVel;
     int mPosX, mPosY;
     int mVelX, mVelY;
 };

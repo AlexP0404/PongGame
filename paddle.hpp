@@ -6,7 +6,7 @@
 class Paddle{
   public:
     const int PADDLE_HEIGHT = 100;
-    const int PAD_VEL = 40;
+    const int PAD_VEL = 50;
     
     Paddle();
     
