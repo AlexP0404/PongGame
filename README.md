@@ -22,3 +22,5 @@ I also hope I learn a lot even though it is a simple project (right now I am lea
 ### Notes
 
 1/4/2023 - I added a few more example code folders that will be really helpful in putting it all together. One is rendering text on the screen that can be updated automatically. Next, there is one that represents motion of a ball (with a ball texture). Finally, there are two that talk about collision between multiple textures. All of these will need deep examination before attempting to implement myself.
+
+1/31/2023 - I pretty much finished the game yesterday and forgot to update the README :expressionless:. I may still continue the game and finish all the kinks and clean up the code somewhat, but right now its just kinda raw and unfiltered. I am a bit disappointed that I didn't accomplish my goal of finishing it by a certain date, but for a while there I set it on the back burner and forgot about it :disappointed:. I am happy, however, with all the knowledge I gained from this project, and I am super excited for whatever I decide to make next! 
