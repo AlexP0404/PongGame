@@ -1,7 +1,4 @@
 #include "gameLoop.hpp"
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_render.h>
-#include <iostream>
 
 GameLoop::GameLoop(){
   numActiveTextures = 0;
@@ -94,6 +91,9 @@ bool GameLoop::init(){
 bool GameLoop::loadMedia(){
   bool success = true;
 
+  gameIcon = IMG_Load("dot.bmp");
+  SDL_SetWindowIcon(gameWindow, gameIcon);
+
   escFont = TTF_OpenFont("lazy.ttf", 15);
   if( escFont == NULL){
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
@@ -113,7 +113,7 @@ bool GameLoop::loadMedia(){
 
       mainFont = TTF_OpenFont("lazy.ttf", 30);
       mainText.str("");
-      mainText << "Press Enter to start";
+      mainText << "Press Enter to start!";
       startPromptTexture.setRenderer(*gameRenderer);
       setStartText();
 
@@ -191,7 +191,7 @@ bool GameLoop::collision(){
     }
   }
 
-  if(dot.getPosY() + dot.DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < 0/*dot.DOT_HEIGHT*/){//bounce off top or bottom walls
+  if(dot.getPosY() + dot.DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < 0){//bounce off top or bottom walls
     //std::cout << dot.getPosY() << " ";
 
     if(dot.getPosY() > SCREEN_HEIGHT / 2)//on the bottom half of the screen
@@ -243,7 +243,12 @@ void GameLoop::loop(){
               break;
             case SDLK_RETURN://enter key to start
               start = true;
-              sb.reset();
+              if(gameOver){
+                gameOver = false;//if we are resetting the game
+                sbTextureLoaded = false;
+                sb.reset();
+                setScoreboardText();
+              }
               mainText.clear();
               mainText.str("");
               numActiveTextures--;
@@ -282,10 +287,6 @@ void GameLoop::loop(){
               p2.handleEvent(false);
               break;
             default:
-              //Mix_PlayChannel(-1, bounce, 0); //this will be called along with the dot.bounce() function
-              /*sb.incPlayer1();
-              setScoreboardText(); //this is somewhat how the scoreboard is gonna be used and updated 
-              sbTextureLoaded = false;*/
               if(lastPressedEsc){
                 numActiveTextures--;
                 lastPressedEsc = false;
@@ -303,7 +304,6 @@ void GameLoop::loop(){
       else
         mainText << "Player 2 Wins!!! Press Enter to start again!";
       numActiveTextures = 1;
-      sbTextureLoaded = false;
       setStartText();
       mainText.clear();
       mainText.str("");
@@ -340,6 +340,9 @@ void GameLoop::loop(){
         setScoreboardText();
         sbTextureLoaded = false;
         gameOver = sb.gameOver();
+        if(p1Scored && gameOver){
+          p1Wins = true;
+        }
         dot.set();
       }
       drawNet();

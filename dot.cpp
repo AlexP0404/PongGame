@@ -12,8 +12,7 @@ Dot::Dot(){
   directionY = 0;
 }
 
-void Dot::bounce(bool isBouncePaddle){//this is gonna be the hardest part
-  //orthogonal to the direction and the wall/paddle?
+void Dot::bounce(bool isBouncePaddle){
   //if bouncing off left/right wall
   //  directionX = -directionX
   //if bouncing off up/down wall
@@ -40,7 +39,7 @@ void Dot::bounce(bool isBouncePaddle){//this is gonna be the hardest part
   else
     mVelY += directionY;
 
-  if(mVelX == 0 && mVelY == 0){
+  if(mVelX == 0 || mVelY == 0){
     mVelX += directionX;
     mVelY += directionY;
   }
@@ -76,11 +75,7 @@ void Dot::set(){//starts the dot out slowly in a random direction (probably lean
 
 void Dot::move(){//updates where the ball is on the screen
                  //after this is updated in the loop, check for any collisions
-  //I want to move the ball at the current velocity (speed) in the proper direction
-  //how to deal with all other angles besides 0,45,90,135,180,225,270,315, and 360
-  //double? 
 
-  //std::cout << mVelX << " ";
   mPosX += mVelX;
   mPosY += mVelY;
 }

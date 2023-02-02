@@ -11,6 +11,7 @@
 #include "dot.hpp"
 #include "paddle.hpp"
 #include "scoreboard.hpp"
+#include <SDL2/SDL_surface.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -43,6 +44,7 @@ class GameLoop{
     std::stringstream mainText;
     SDL_Window* gameWindow;
     SDL_Renderer* gameRenderer;
+    SDL_Surface* gameIcon;
     TTF_Font* mainFont;
     TTF_Font* escFont;
     Texture textures[MAX_TEXTURES];
