@@ -85,6 +85,7 @@ bool GameLoop::init(){
       }
     }
   }
+  m_GameTimer.Reset();
   return success;
 }
 

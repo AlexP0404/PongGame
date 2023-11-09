@@ -31,7 +31,7 @@ gameLoop : gameLoop.cpp gameLoop.o
 scoreboard : scoreboard.cpp scoreboard.o
 paddle : paddle.cpp paddle.o
 texture : Texture.cpp Texture.o
-
+#timer : Timer.hpp
 
 
 .PHONY: clean

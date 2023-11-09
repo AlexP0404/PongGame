@@ -11,6 +11,7 @@
 #include "dot.hpp"
 #include "paddle.hpp"
 #include "scoreboard.hpp"
+#include "timer.hpp"
 #include <SDL2/SDL_surface.h>
 #include <iostream>
 #include <string>
@@ -65,6 +66,7 @@ class GameLoop{
     bool p1Wins;
     int framesSinceCollision;
     Mix_Chunk *bounce = NULL;
+    Timer m_GameTimer;
 };
 
 #endif // !GAMELOOP_HPP
