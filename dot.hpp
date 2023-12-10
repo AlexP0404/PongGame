@@ -21,7 +21,6 @@ class Dot
                   //how to handle bounce?
     void set();
     void move();//move faster the longer it goes without resetting (scoring)
-    void render();//this will likely have to be made in the gameloop
     void setScreen(int h, int w);
     int getPosX();
     int getPosY();

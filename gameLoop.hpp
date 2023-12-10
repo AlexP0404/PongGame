@@ -16,6 +16,13 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+//need to create an "entity" class that is the base class
+//for the pong and the paddles
+//need to start multithreading for keychecking so both players
+//can move at once
+//make the game loop based on timers instead of framerate
+//fix collision with outter boundaries of the window
+//then add networking (UDP?) to make it online multiplayer
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 960;
