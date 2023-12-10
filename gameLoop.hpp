@@ -26,7 +26,7 @@
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 960;
-const int MAX_TEXTURES = 100;
+const int MAX_TEXTURES = 15;
 const int PADDLE_WIDTH = 20;
 const int PADDLE_HEIGHT = 100;
 const int PADDLE_OFFSET = 100;
@@ -42,6 +42,7 @@ class GameLoop{
     bool collision();
     bool score();
     void setStartText();
+    void setSpeedSelectText();
     void drawNet();
     void setScoreboardText();
     void drawDot();
@@ -55,11 +56,13 @@ class GameLoop{
     SDL_Surface* gameIcon;
     TTF_Font* mainFont;
     TTF_Font* escFont;
-    Texture textures[MAX_TEXTURES];
+    vector<Texture> textures;
     Texture startPromptTexture;
+    Texture speedPromptTexture;
     Texture escPromptTexture;
     Texture scoreboardTexture;
     int numActiveTextures;
+    int scoreBoardTextIndx;
     SDL_Color textColor;
     Dot dot;
     Scoreboard sb;
@@ -71,9 +74,9 @@ class GameLoop{
     bool bounceOffPaddle;
     bool p1Scored;
     bool p1Wins;
-    int framesSinceCollision;
     Mix_Chunk *bounce = NULL;
     Timer m_GameTimer;
+    Timer m_CollisionTimer;
 };
 
 #endif // !GAMELOOP_HPP
