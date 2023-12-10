@@ -2,7 +2,6 @@
 
 GameLoop::GameLoop(){
   numActiveTextures = 0;
-  framesSinceCollision = 0;
   gameWindow = NULL;
   gameRenderer = NULL;
   mainFont = NULL;
@@ -14,13 +13,6 @@ GameLoop::GameLoop(){
 }
 
 GameLoop::~GameLoop(){
-  for(auto i : textures){
-    i.free();
-  }
-  startPromptTexture.free();
-  escPromptTexture.free();
-  scoreboardTexture.free();
-
   TTF_CloseFont(mainFont);
   TTF_CloseFont(escFont);
   mainFont = NULL;
@@ -109,7 +101,7 @@ bool GameLoop::loadMedia(){
     else {
       escPromptTexture.setxCoor(0);
       escPromptTexture.setyCoor(0);
-      textures[numActiveTextures] = escPromptTexture;
+      textures.push_back(escPromptTexture);
       numActiveTextures++;
 
       mainFont = TTF_OpenFont("lazy.ttf", 30);
@@ -141,7 +133,7 @@ void GameLoop::setStartText(){//sets the large MAIN  text to the current mainTex
   startPromptTexture.loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
   startPromptTexture.setxCoor(( SCREEN_WIDTH - startPromptTexture.getWidth() ) / 2);
   startPromptTexture.setyCoor(( SCREEN_HEIGHT - startPromptTexture.getHeight() ) / 2);
-  textures[numActiveTextures] = startPromptTexture;
+  textures.push_back(startPromptTexture);
   numActiveTextures++;
 }
 
@@ -168,17 +160,20 @@ void GameLoop::renderTextures(){
   SDL_SetRenderDrawColor(gameRenderer, 0,0,0,0xFF);
   SDL_RenderClear(gameRenderer);
   
-  for(int i = 0; i < numActiveTextures; i++){
-    textures[i].render();
+  //for(int i = 0; i < numActiveTextures; i++){
+    //textures[i].render();
     //std::cout << i << " ";//prints the indexes of the textures as they are being rendered
+  //}
+  for(auto& i : textures){
+  	i.render();
   }
 }
 
 bool GameLoop::collision(){
-  if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH + 2 && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
+  if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH /*+ 2*/ && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
     if(dot.getPosY() >= p1.getPos() - dot.DOT_HEIGHT && dot.getPosY() <= p1.getPos() + PADDLE_HEIGHT){
       if(!bounceOffPaddle)
-        framesSinceCollision = 0;
+	m_CollisionTimer.Reset();
       bounceOffPaddle = true;
       return true;
     }
@@ -186,13 +181,13 @@ bool GameLoop::collision(){
   if(dot.getPosX() >= SCREEN_WIDTH - PADDLE_OFFSET + 2 && dot.getPosX() <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
     if(dot.getPosY() >= p2.getPos() - dot.DOT_HEIGHT && dot.getPosY() <= p2.getPos() + PADDLE_HEIGHT){
       if(!bounceOffPaddle)
-        framesSinceCollision = 0;
+	m_CollisionTimer.Reset();
       bounceOffPaddle = true;
       return true;
     }
   }
 
-  if(dot.getPosY() + dot.DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < 0){//bounce off top or bottom walls
+  if(dot.getPosY() + dot.DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < dot.DOT_HEIGHT){//bounce off top or bottom walls
     //std::cout << dot.getPosY() << " ";
 
     if(dot.getPosY() > SCREEN_HEIGHT / 2)//on the bottom half of the screen
@@ -201,7 +196,7 @@ bool GameLoop::collision(){
       dot.setPosY(dot.getPosY() + 2);
 
     bounceOffPaddle = false;
-    //framesSinceCollision = 0;
+    m_CollisionTimer.Reset();
     return true;
   }
 
@@ -244,7 +239,11 @@ void GameLoop::loop(){
               break;
             case SDLK_RETURN://enter key to start
               start = true;
-              if(gameOver){
+	      m_GameTimer.Reset();
+  	      scoreBoardTextIndx = textures.size();
+              textures.push_back(scoreboardTexture);
+	      sbTextureLoaded = true;
+	      if(gameOver){
                 gameOver = false;//if we are resetting the game
                 sbTextureLoaded = false;
                 sb.reset();
@@ -312,25 +311,25 @@ void GameLoop::loop(){
 
     if(start && !sbTextureLoaded){
       sbTextureLoaded = true;
-      textures[numActiveTextures] = scoreboardTexture;
+      textures.erase(textures.begin()+scoreBoardTextIndx);
+      scoreBoardTextIndx = textures.size();//will be the last element
+      textures.push_back(scoreboardTexture);
       numActiveTextures++;
       //std::cout << "After the start texture the next index is: " << numActiveTextures << std::endl;
     }
 
-    if(numActiveTextures <= 0){    
+    if(numActiveTextures <= 0 || textures.empty()){    
       textures[0] = escPromptTexture;//if somehow accidentally deleted too many from the array, keep at least the escape prompt
       numActiveTextures = 1; 
     }
     renderTextures();
     if(start && !lastPressedEsc){
       dot.move();
-      if(framesSinceCollision > 60 && collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
+      if(m_CollisionTimer.ElapsedMillis() > 80.0f && collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
         //std::cout << dot.getPosX() << ',' << dot.getPosY() << " ";
         dot.bounce(bounceOffPaddle);
         Mix_PlayChannel(-1, bounce, 0);
-      }
-      else{
-        framesSinceCollision++;
+	//m_CollisionTimer.Reset();
       }
       if(score()){//this needs to compare the position of the dot and the paddles and check if it scored.  
                        //if it did score, figure out which player scored and increment the score then call scoreboard.gameOver() to check if the game is over

@@ -7,6 +7,7 @@ Dot::Dot(){
   
   mVelY = 0;
   mVelX = 0;
+  m_InitSpeed = 2;
 
   directionX = 0;
   directionY = 0;
@@ -40,10 +41,14 @@ void Dot::bounce(bool isBouncePaddle){
     mVelY += directionY;
 
   if(mVelX == 0 || mVelY == 0){
-    mVelX += directionX;
-    mVelY += directionY;
+    mVelX += directionX * m_InitSpeed;
+    mVelY += directionY * m_InitSpeed;
   }
   //std::cout << mVelX << "," << mVelY <<  " ";
+}
+
+void Dot::setInitSpeed(int speed){
+  this->m_InitSpeed = speed;
 }
 
 void Dot::setPosY(int y){
@@ -67,17 +72,18 @@ void Dot::set(){//starts the dot out slowly in a random direction (probably lean
   directionX = (genRandom()) ? 1 : -1;//if true, positive, else negative
   directionY = (genRandom()) ? 1 : -1;
   
-  mVelX = directionX;
-  mVelY = directionY;
+  mVelX = directionX * m_InitSpeed;
+  mVelY = directionY * m_InitSpeed;
   
   //std::cout << directionX << ',' << directionY << std::endl; 
 }
 
 void Dot::move(){//updates where the ball is on the screen
                  //after this is updated in the loop, check for any collisions
-
-  mPosX += mVelX;
-  mPosY += mVelY;
+  
+  mPosX += mVelX * m_dotTimer.ElapsedMillis() / 10;
+  mPosY += mVelY * m_dotTimer.ElapsedMillis() / 10;
+  m_dotTimer.Reset();
 }
 
 int Dot::getPosX(){

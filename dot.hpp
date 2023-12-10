@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <time.h>
+#include "timer.hpp"
 //dot needs to move on its own
 //INITIALLY: moves in random direction slowly.
 //when a collision is detected: bounce() needs to do some math to figure out the direction it goes next
@@ -14,7 +15,7 @@ class Dot
     static const int DOT_WIDTH = 20;
     static const int DOT_HEIGHT = 20;
     
-    static const int MAX_DOT_VEL = 2;
+    static const int MAX_DOT_VEL = 5;
 
     Dot();
     void bounce(bool isBouncePaddle);//needs to handle bouncing off top and bottom walls and paddles
@@ -26,12 +27,15 @@ class Dot
     int getPosX();
     int getPosY();
     void setPosY(int y);
+    void setInitSpeed(int speed = 2);
 
   private:
     int screenHeight, screenWidth;
     int directionX, directionY;
     int mPosX, mPosY;
     int mVelX, mVelY;
+    int m_InitSpeed;
+    Timer m_dotTimer;
 };
 
 #endif // !DOT_HPP
