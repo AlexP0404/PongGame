@@ -1,5 +1,6 @@
 #include "Texture.hpp"
 
+
 Texture::Texture(){
   mTexture = NULL;
   mWidth = 0;
@@ -18,6 +19,7 @@ Texture::Texture(SDL_Renderer& renderer, int xCoor, int yCoor){
 Texture::~Texture(){
   free();
 }
+
 
 void Texture::setRenderer(SDL_Renderer &renderer){
   this->gameRenderer = &renderer;

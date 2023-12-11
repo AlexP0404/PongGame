@@ -7,20 +7,17 @@
 class Paddle : public Entity { 
   public:
     using Entity::Entity;//using the base class constructor
+    Paddle(Paddle &p){
+      p = *this; 
+    }
     Paddle& operator=(const Paddle&){
       return *this;
     }
 
-    void setScreenHeight(int screenHeight);
-    void handleEvent(bool up);
-    void setPos(int pos);
-    int getPos();
+    void move(bool dir) override;
     
     const int PADDLE_HEIGHT = 100;
     const int PAD_VEL = 50;
-  public:
-    int screenHeight;
-    int velY;
 };
 
 #endif // !PADDLE_HPP

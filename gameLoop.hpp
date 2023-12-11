@@ -16,6 +16,11 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <unordered_map>
+#include <memory>
+#include <exception>
+using std::unique_ptr;
+using std::unordered_map;
 //need to create an "entity" class that is the base class
 //for the pong and the paddles
 //need to start multithreading for keychecking so both players
@@ -56,13 +61,7 @@ class GameLoop{
     SDL_Surface* gameIcon;
     TTF_Font* mainFont;
     TTF_Font* escFont;
-    vector<Texture> textures;
-    Texture startPromptTexture;
-    Texture speedPromptTexture;
-    Texture escPromptTexture;
-    Texture scoreboardTexture;
-    int numActiveTextures;
-    int scoreBoardTextIndx;
+    unordered_map<std::string,unique_ptr<Texture,textureDeleter>> textures;//map all textures on hash table
     SDL_Color textColor;
     Dot dot;
     Scoreboard sb;

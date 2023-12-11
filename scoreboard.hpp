@@ -6,7 +6,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <string>
 
-const int SCORE_TO_WIN = 7;
+const int SCORE_TO_WIN = 7;//maybe this can be a game option
 
 class Scoreboard{
   public:

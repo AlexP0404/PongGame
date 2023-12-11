@@ -8,7 +8,7 @@ class Entity {
     Entity(int sizeX = 0, int sizeY = 0, int screenH = 0, int screenW = 0,int velX = 0, int velY = 0)
     : mSizeX(sizeX), mSizeY(sizeY), mScreenH(screenH), mScreenW(screenW) , mVelX(velX), mVelY(velY){}
     virtual ~Entity() = default;
-
+    virtual void move(bool dir = false) = 0;
     void setScreen(int width, int height){
        mScreenW = width;
        mScreenH = height;
@@ -23,6 +23,10 @@ class Entity {
       mVelX = velX;
       mVelY = velY;
     }
+    void setSize(int sizeX, int sizeY){
+      mSizeX = sizeX;
+      mSizeY = sizeY;
+    }
 
     int getPosX() { return mPosX; }
     int getPosY() { return mPosY; }
@@ -30,14 +34,14 @@ class Entity {
     int getSizeY() { return mSizeY; }
     inline bool genRandBool() { return mRandDev() % 10 > 5; } //50/50 to be true or false
   protected:
-    int mSizeX   = 0;
-    int mSizeY   = 0;
-    int mPosX    = 0;
-    int mPosY    = 0;
-    int mScreenW = 0;
-    int mScreenH = 0;
-    int mVelX    = 0;
-    int mVelY    = 0;
+    int mSizeX;
+    int mSizeY;
+    int mPosX = 0;
+    int mPosY = 0;
+    int mScreenW;
+    int mScreenH;
+    int mVelX;
+    int mVelY;
     std::random_device mRandDev;
 };
 

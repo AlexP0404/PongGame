@@ -7,7 +7,7 @@ DEBUG_FLAG = -g
 
 #COMPILER_FLAGS specifies the additional compilation options we're using
 #-w suppresses all warnings lol
-COMPILER_FLAGS = -std=c++11 -Wall
+CXXFLAGS = -std=c++17 -Wall -g
 
 #INCLUDE_FLAGS specifies the additional include file locations
 INCLUDE_FLAGS = /usr/include/SDL2
@@ -24,7 +24,7 @@ pong : $(OBJS)
 	$(CXX)  $(OBJS) $(COMPILER_FLAGS) -I $(INCLUDE_FLAGS) $(LINKER_FLAGS) -o $(OBJ_NAME)
 
 debug : $(OBJS)
-	$(CXX) $(OBJS) -I $(INCLUDE_FLAGS) $(COMPILER_FLAGS) $(DEBUG_FLAG) $(LINKER_FLAGS) $(DEBUG_FLAG) -o $(DEBUG_NAME)
+	$(CXX) -I $(INCLUDE_FLAGS) $(LINKER_FLAGS) $(COMPILER_FLAGS) $(DEBUG_FLAG) $(OBJS) -o $(DEBUG_NAME)
 
 dot : dot.cpp dot.o
 gameLoop : gameLoop.cpp gameLoop.o

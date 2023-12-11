@@ -12,6 +12,14 @@ public:
   Texture();
   Texture(SDL_Renderer& renderer, int xCoor, int yCoor);
   ~Texture();
+  Texture(Texture& t){
+    t.mTexture = mTexture;
+    t.gameRenderer = gameRenderer;
+    t.mWidth = mWidth;
+    t.mHeight = mHeight;
+    t.xCoor = xCoor;
+    t.yCoor = yCoor;
+  }
   
   void setRenderer(SDL_Renderer& renderer);
   bool loadFromFile(std::string path);
@@ -36,4 +44,14 @@ private:
   int yCoor;
   SDL_Renderer* gameRenderer;
 };
+
+class textureDeleter{
+public:
+  textureDeleter() = default;
+  void operator()(Texture* t){
+    t->free();
+    delete t;
+  }
+};
+
 #endif // !TEXTURE_HPP

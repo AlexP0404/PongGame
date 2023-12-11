@@ -3,37 +3,33 @@
 #include <iostream>
 #include <random>
 #include <time.h>
+#include "entity.hpp"
 #include "timer.hpp"
 //dot needs to move on its own
 //INITIALLY: moves in random direction slowly.
 //when a collision is detected: bounce() needs to do some math to figure out the direction it goes next
                               //along with the velocity of the ball.
+const int DOT_WIDTH = 20;
+const int DOT_HEIGHT = 20;
 
-class Dot
+class Dot : public Entity
 {
   public:
-    static const int DOT_WIDTH = 20;
-    static const int DOT_HEIGHT = 20;
-    
-    static const int MAX_DOT_VEL = 5;
 
-    Dot();
+    using Entity::Entity;
+    Dot& operator=(const Dot&){ return *this; }
     void bounce(bool isBouncePaddle);//needs to handle bouncing off top and bottom walls and paddles
                   //how to handle bounce?
     void set();
-    void move();//move faster the longer it goes without resetting (scoring)
-    void setScreen(int h, int w);
-    int getPosX();
-    int getPosY();
-    void setPosY(int y);
+    void move(bool dir = false) override;//move faster the longer it goes without resetting (scoring)
     void setInitSpeed(int speed = 2);
 
+    const int MAX_DOT_VEL = 5;
+  
   private:
-    int screenHeight, screenWidth;
-    int directionX, directionY;
-    int mPosX, mPosY;
-    int mVelX, mVelY;
-    int m_InitSpeed;
+    int directionX = 0;
+    int directionY = 0;
+    int m_InitSpeed = 0;
     Timer m_dotTimer;
 };
 

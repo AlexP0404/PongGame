@@ -2,8 +2,7 @@
 #include <string>
 
 Scoreboard::Scoreboard(){
-  player1Score = 0;
-  player2Score = 0;
+  reset();
 }
 
 void Scoreboard::reset(){

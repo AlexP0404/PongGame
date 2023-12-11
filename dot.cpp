@@ -1,18 +1,5 @@
 #include "dot.hpp"
 
-Dot::Dot(){
-  srandom(time(NULL));
-  mPosX = 0;
-  mPosY = 0;
-  
-  mVelY = 0;
-  mVelX = 0;
-  m_InitSpeed = 2;
-
-  directionX = 0;
-  directionY = 0;
-}
-
 void Dot::bounce(bool isBouncePaddle){
   //if bouncing off left/right wall
   //  directionX = -directionX
@@ -40,56 +27,39 @@ void Dot::bounce(bool isBouncePaddle){
   else
     mVelY += directionY;
 
-  if(mVelX == 0 || mVelY == 0){
-    mVelX += directionX * m_InitSpeed;
-    mVelY += directionY * m_InitSpeed;
+  if(mVelX == 0 && mVelY == 0){
+    mVelX += (directionX > 0) ? directionX + m_InitSpeed : directionX - m_InitSpeed;
+    mVelY += (directionY > 0) ? directionY + m_InitSpeed : directionY - m_InitSpeed;
   }
-  //std::cout << mVelX << "," << mVelY <<  " ";
 }
 
 void Dot::setInitSpeed(int speed){
   this->m_InitSpeed = speed;
 }
 
-void Dot::setPosY(int y){
-  this->mPosY = y;
-}
-
-void Dot::setScreen(int h, int w){
-  screenHeight = h;
-  screenWidth = w;
-}
-
-bool genRandom(){
-  return (rand() % 10 > 5);//if it is 
-}
-
 void Dot::set(){//starts the dot out slowly in a random direction (probably lean more towards the players)
-  mPosX = screenWidth / 2;
-  mPosY = screenHeight / 2;
+  mPosX = mScreenW / 2;
+  mPosY = mScreenH / 2;
   
   
-  directionX = (genRandom()) ? 1 : -1;//if true, positive, else negative
-  directionY = (genRandom()) ? 1 : -1;
+  directionX = (genRandBool()) ? 1 : -1;//if true, positive, else negative
+  directionY = (genRandBool()) ? 1 : -1;
   
-  mVelX = directionX * m_InitSpeed;
-  mVelY = directionY * m_InitSpeed;
-  
+  mVelX = (directionX > 0) ? directionX + m_InitSpeed : directionX - m_InitSpeed;
+  mVelY = (directionY > 0) ? directionY + m_InitSpeed : directionY - m_InitSpeed;
+  //TODO:: FIX DOT BEING STUCK OCCASIONALLY AT THE START
+  //       FIX OVERRALL SPEED OF THE DOT (TIMERS)
+  //       FIX DOT BOUNCE/COLLSION SYSTEM
+  //
   //std::cout << directionX << ',' << directionY << std::endl; 
 }
 
-void Dot::move(){//updates where the ball is on the screen
+void Dot::move(bool dir){//updates where the ball is on the screen
                  //after this is updated in the loop, check for any collisions
-  
-  mPosX += mVelX * m_dotTimer.ElapsedMillis() / 10;
-  mPosY += mVelY * m_dotTimer.ElapsedMillis() / 10;
+  float elapsed = m_dotTimer.ElapsedMillis(); 
+  mPosX += mVelX * elapsed / 5;
+  mPosY += mVelY * elapsed / 5;
   m_dotTimer.Reset();
+  std::cout << mPosX << "," << mPosY <<  " ";
 }
 
-int Dot::getPosX(){
-  return mPosX;
-} 
-
-int Dot::getPosY(){
-  return mPosY;
-}
