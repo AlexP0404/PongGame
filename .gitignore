@@ -3,3 +3,4 @@ dot.o
 gameLoop.o
 main.o
 pong
+pongDebug

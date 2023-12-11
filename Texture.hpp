@@ -45,13 +45,4 @@ private:
   SDL_Renderer* gameRenderer;
 };
 
-class textureDeleter{
-public:
-  textureDeleter() = default;
-  void operator()(Texture* t){
-    t->free();
-    delete t;
-  }
-};
-
 #endif // !TEXTURE_HPP

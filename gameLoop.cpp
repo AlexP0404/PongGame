@@ -102,7 +102,7 @@ bool GameLoop::loadMedia() {
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
     success = false;
   } else {
-    textures["escapePrompt"] = unique_ptr<Texture,textureDeleter>
+    textures["escapePrompt"] = unique_ptr<Texture>
       (new Texture(*gameRenderer,0,0));//uses full parameter constructor
     if (!textures.at("escapePrompt")->loadFromRenderedText(
         "Press Escape to quit",textColor, escFont)) {
@@ -113,11 +113,11 @@ bool GameLoop::loadMedia() {
       mainFont = TTF_OpenFont("lazy.ttf", 30);
       mainText.str("");
       mainText << "Press Enter to start!";
-      textures["startPrompt"] = unique_ptr<Texture,textureDeleter>
+      textures["startPrompt"] = unique_ptr<Texture>
         (new Texture(*gameRenderer,0,0));//uses constructor with no parameters
       setStartText();
-      textures["speedPrompt"] = unique_ptr<Texture,textureDeleter>(new Texture(*gameRenderer,0,0));
-      textures["scoreBoard"] = unique_ptr<Texture,textureDeleter>(new Texture(*gameRenderer,0,0));
+      textures["speedPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
+      textures["scoreBoard"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
 
       dot.setScreen(SCREEN_HEIGHT, SCREEN_WIDTH);
       bounce = Mix_LoadWAV("bounce.wav");
@@ -140,7 +140,7 @@ void GameLoop::setScoreboardText() {
     textures.at("scoreBoard")->setyCoor(150); // more towards the top of the screen
   }
   catch(std::exception& e){
-    textures["scoreBoard"] = unique_ptr<Texture,textureDeleter>
+    textures["scoreBoard"] = unique_ptr<Texture>
       (new Texture(*gameRenderer,0,0));
     setScoreboardText();//this is a potential infinite loop lol
   }
@@ -153,7 +153,7 @@ void GameLoop::setStartText(){//sets the large MAIN  text to the current mainTex
     textures.at("startPrompt")->setyCoor(( SCREEN_HEIGHT - textures.at("startPrompt")->getHeight() ) / 2);
   }
   catch(std::exception& e){
-    textures["startPrompt"] = unique_ptr<Texture,textureDeleter>
+    textures["startPrompt"] = unique_ptr<Texture>
       (new Texture(*gameRenderer,0,0));
     setStartText();//this is a potential infinite loop lol
   }

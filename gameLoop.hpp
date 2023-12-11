@@ -61,7 +61,7 @@ class GameLoop{
     SDL_Surface* gameIcon;
     TTF_Font* mainFont;
     TTF_Font* escFont;
-    unordered_map<std::string,unique_ptr<Texture,textureDeleter>> textures;//map all textures on hash table
+    unordered_map<std::string,unique_ptr<Texture>> textures;//map all textures on hash table
     SDL_Color textColor;
     Dot dot;
     Scoreboard sb;
