@@ -35,6 +35,8 @@ const int MAX_TEXTURES = 15;
 const int PADDLE_WIDTH = 20;
 const int PADDLE_HEIGHT = 100;
 const int PADDLE_OFFSET = 100;
+const float COLLISION_CHECK_DELAY = 100.0f;
+const float GAME_LOOP_DELAY = 10.0f;
 
 class GameLoop{
   public:
@@ -53,6 +55,7 @@ class GameLoop{
     void drawDot();
     void drawPaddles();
     void loop();
+    void countDown();
 
   private:
     std::stringstream mainText;
@@ -75,7 +78,8 @@ class GameLoop{
     bool p1Wins;
     Mix_Chunk *bounce = NULL;
     Timer m_GameTimer;
-    Timer m_CollisionTimer;
+    Timer m_CollisionPaddleTimer;
+    Timer m_CollisionBorderTimer;
 };
 
 #endif // !GAMELOOP_HPP

@@ -1,17 +1,19 @@
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
 
+// #include <iostream>
 #include <random>
 
 class Entity {
   public:
-    Entity(int sizeX = 0, int sizeY = 0, int screenH = 0, int screenW = 0,int velX = 0, int velY = 0)
-    : mSizeX(sizeX), mSizeY(sizeY), mScreenH(screenH), mScreenW(screenW) , mVelX(velX), mVelY(velY){}
+    Entity(int sizeX = 0, int sizeY = 0, int velX = 0, int velY = 0)
+    : mSizeX(sizeX), mSizeY(sizeY), mVelX(velX), mVelY(velY){}
     virtual ~Entity() = default;
     virtual void move(bool dir = false) = 0;
     void setScreen(int width, int height){
        mScreenW = width;
        mScreenH = height;
+       // std::cout << "Screen Dim: " << mScreenW << "x" << mScreenH << '\n';
     }
 
     void setPos(int posX, int posY){
@@ -38,8 +40,8 @@ class Entity {
     int mSizeY;
     int mPosX = 0;
     int mPosY = 0;
-    int mScreenW;
-    int mScreenH;
+    int mScreenW = 0;
+    int mScreenH = 0;
     int mVelX;
     int mVelY;
     std::random_device mRandDev;

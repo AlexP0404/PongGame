@@ -7,13 +7,13 @@ void Dot::bounce(bool isBouncePaddle){
   //  directionY = -directionY
   if(isBouncePaddle){
     directionX = -directionX;
+    mVelX = -mVelX;
   }
   else{
     directionY = -directionY;
+    mVelY = -mVelY;
   }
 
-  mVelX *= directionX;
-  mVelY *= directionY;
 
   if(mVelX >= MAX_DOT_VEL || (mVelX * -1) >= MAX_DOT_VEL){
     mVelX = MAX_DOT_VEL * directionX;//hard cap
@@ -40,18 +40,12 @@ void Dot::setInitSpeed(int speed){
 void Dot::set(){//starts the dot out slowly in a random direction (probably lean more towards the players)
   mPosX = mScreenW / 2;
   mPosY = mScreenH / 2;
-  
-  
+  m_dotTimer.Reset();  
   directionX = (genRandBool()) ? 1 : -1;//if true, positive, else negative
   directionY = (genRandBool()) ? 1 : -1;
   
   mVelX = (directionX > 0) ? directionX + m_InitSpeed : directionX - m_InitSpeed;
   mVelY = (directionY > 0) ? directionY + m_InitSpeed : directionY - m_InitSpeed;
-  //TODO:: FIX DOT BEING STUCK OCCASIONALLY AT THE START
-  //       FIX OVERRALL SPEED OF THE DOT (TIMERS)
-  //       FIX DOT BOUNCE/COLLSION SYSTEM
-  //
-  //std::cout << directionX << ',' << directionY << std::endl; 
 }
 
 void Dot::move(bool dir){//updates where the ball is on the screen
@@ -60,6 +54,6 @@ void Dot::move(bool dir){//updates where the ball is on the screen
   mPosX += mVelX * elapsed / 5;
   mPosY += mVelY * elapsed / 5;
   m_dotTimer.Reset();
-  std::cout << mPosX << "," << mPosY <<  " ";
+  // std::cout << mPosX << "," << mPosY <<  " ";
 }
 

@@ -1,6 +1,8 @@
 #include "gameLoop.hpp"
 #include "Texture.hpp"
 #include "dot.hpp"
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_video.h>
 
 GameLoop::GameLoop() {
   gameWindow = NULL;
@@ -54,11 +56,12 @@ bool GameLoop::init() {
     }
     gameWindow = SDL_CreateWindow("Pong", SDL_WINDOWPOS_UNDEFINED,
                                   SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-                                  SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+                                  SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS);
     if (gameWindow == NULL) {
       printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
       success = false;
     } else {
+      
       gameRenderer = SDL_CreateRenderer(
           gameWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
       if (gameRenderer == NULL) {
@@ -119,7 +122,6 @@ bool GameLoop::loadMedia() {
       textures["speedPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
       textures["scoreBoard"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
 
-      dot.setScreen(SCREEN_HEIGHT, SCREEN_WIDTH);
       bounce = Mix_LoadWAV("bounce.wav");
       if (bounce == NULL) {
         printf("Failed to load bounce sound effect! SDL_mixer Error: %s\n",
@@ -189,36 +191,38 @@ void GameLoop::renderTextures() {
 }
 
 bool GameLoop::collision(){
-  if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH /*+ 2*/ && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
-    if(dot.getPosY() >= p1.getPosY() - DOT_HEIGHT && dot.getPosY() <= p1.getPosY() + PADDLE_HEIGHT){
-      if(!bounceOffPaddle)
-	m_CollisionTimer.Reset();
-      bounceOffPaddle = true;
+  if(m_CollisionPaddleTimer.ElapsedMillis() > COLLISION_CHECK_DELAY){
+    if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH + 2 && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
+      if(dot.getPosY() >= p1.getPosY() - DOT_HEIGHT && dot.getPosY() <= p1.getPosY() + PADDLE_HEIGHT){
+        if(!bounceOffPaddle)
+          m_CollisionPaddleTimer.Reset();
+        bounceOffPaddle = true;
+        return true;
+      }
+    }
+    if(dot.getPosX() >= SCREEN_WIDTH - PADDLE_OFFSET - 2 && dot.getPosX() <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
+      if(dot.getPosY() >= p2.getPosY() - DOT_HEIGHT && dot.getPosY() <= p2.getPosY() + PADDLE_HEIGHT){
+        if(!bounceOffPaddle)
+          m_CollisionPaddleTimer.Reset();
+        bounceOffPaddle = true;
+        return true;
+      }
+    }
+  }
+  if(m_CollisionBorderTimer.ElapsedMillis() > COLLISION_CHECK_DELAY){
+    if(dot.getPosY() + DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < DOT_HEIGHT){//bounce off top or bottom walls
+      //std::cout << dot.getPosY() << " ";
+
+      if (dot.getPosY() > SCREEN_HEIGHT / 2) // on the bottom half of the screen
+        dot.setPos(dot.getPosX(),dot.getPosY() - 2);
+      else
+        dot.setPos(dot.getPosX(),dot.getPosY() + 2);
+
+      bounceOffPaddle = false;
+      m_CollisionBorderTimer.Reset();
       return true;
     }
   }
-  if(dot.getPosX() >= SCREEN_WIDTH - PADDLE_OFFSET + 2 && dot.getPosX() <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
-    if(dot.getPosY() >= p2.getPosY() - DOT_HEIGHT && dot.getPosY() <= p2.getPosY() + PADDLE_HEIGHT){
-      if(!bounceOffPaddle)
-        m_CollisionTimer.Reset();
-      bounceOffPaddle = true;
-      return true;
-    }
-  }
-
-  if(dot.getPosY() + DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < DOT_HEIGHT){//bounce off top or bottom walls
-    //std::cout << dot.getPosY() << " ";
-
-    if (dot.getPosY() > SCREEN_HEIGHT / 2) // on the bottom half of the screen
-      dot.setPos(dot.getPosX(),dot.getPosY() - 2);
-    else
-      dot.setPos(dot.getPosX(),dot.getPosY() + 2);
-
-    bounceOffPaddle = false;
-    m_CollisionTimer.Reset();
-    return true;
-  }
-
   return false;
 }
 
@@ -234,6 +238,20 @@ bool GameLoop::score() {
   return false;
 }
 
+void GameLoop::countDown(){
+  int countDownSeconds = 3;
+  Timer countDownTimer;
+  for(int i = countDownSeconds; i >= 0; i--){
+    mainText.str("");
+    mainText << "Starting in " << i;
+    setStartText();
+    while(countDownTimer.ElapsedMillis() < 1000.0f);
+    countDownTimer.Reset();
+    renderTextures();
+    SDL_RenderPresent(gameRenderer);
+  }
+}
+
 void GameLoop::loop() {
 
   bool quit = false;
@@ -241,11 +259,12 @@ void GameLoop::loop() {
   bool gameOver = false;
   bool lastPressedEsc =
       false; // you have to press esc then enter once the game started to quit
-  bool sbTextureLoaded = false;
   Timer delayBetweenRounds;
   SDL_Event e;
 
   while (!quit) {
+    while(m_GameTimer.ElapsedMillis() < GAME_LOOP_DELAY);
+    m_GameTimer.Reset();
     while (SDL_PollEvent(&e) != 0) {
       if (e.type == SDL_QUIT) {
         quit = true;
@@ -256,19 +275,15 @@ void GameLoop::loop() {
               quit = true;
               break;
             case SDLK_RETURN://enter key to start
+              countDown();
+              textures.erase("startPrompt");
               start = true;
-	            m_GameTimer.Reset();
-              sbTextureLoaded = true;
               setScoreboardText();
               if(gameOver){
                 gameOver = false;//if we are resetting the game
-                sbTextureLoaded = false;
                 sb.reset();
                 setScoreboardText();
               }
-              mainText.clear();
-              mainText.str("");
-              textures.erase("startPrompt");
               dot.set();
               break;
             default:
@@ -280,10 +295,9 @@ void GameLoop::loop() {
               if (lastPressedEsc)
                 break;
               lastPressedEsc = true;
+              mainText.str("");
               mainText << "Are you sure you want to quit? Press Enter if yes.";
               setStartText();
-              mainText.clear();
-              mainText.str("");
               break;
               // all the other cases now update lastPressedEsc to true because it
               // wasnt pressed 2x in a row
@@ -306,6 +320,8 @@ void GameLoop::loop() {
             default:
               if (lastPressedEsc) {
                 lastPressedEsc = false;
+                countDown();
+                textures.erase("startPrompt");//remove the escape text
               }
               break;
           }
@@ -321,22 +337,17 @@ void GameLoop::loop() {
       else
         mainText << "Player 2 Wins!!! Press Enter to start again!";
       setStartText();
-      mainText.clear();
       mainText.str("");
     }
 
-    if (start && !sbTextureLoaded) {
-      sbTextureLoaded = true;
-    }
 
     renderTextures();
     if (start && !lastPressedEsc) {
       dot.move();
-      if(m_CollisionTimer.ElapsedMillis() > 80.0f && collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
-        //std::cout << dot.getPosX() << ',' << dot.getPosY() << " ";
+      if(collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
         dot.bounce(bounceOffPaddle);
         Mix_PlayChannel(-1, bounce, 0);
-        //m_CollisionTimer.Reset();
+        // std::cout << "COLLISION: " << ((bounceOffPaddle) ? "PADDLE\n" : "BORDER\n");
       }
       if (score()) { // this needs to compare the position of the dot and the
                      // paddles and check if it scored. if it did score, figure
@@ -348,13 +359,11 @@ void GameLoop::loop() {
           sb.incPlayer2();
 
         setScoreboardText();
-        sbTextureLoaded = false;
         gameOver = sb.gameOver();
         if (p1Scored && gameOver) {
           p1Wins = true;
         }
         dot.set();
-        while(delayBetweenRounds.ElapsedMillis() < 500);//give user a tiny bit of time before starting again
       }
       drawNet();
       drawPaddles();
