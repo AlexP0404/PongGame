@@ -17,7 +17,7 @@ class Paddle : public Entity {
     void move(bool dir) override;
     
     const int PADDLE_HEIGHT = 100;
-    const int PAD_VEL = 50;
+    const int PAD_VEL = 10;
 };
 
 #endif // !PADDLE_HPP

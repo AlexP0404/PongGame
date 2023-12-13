@@ -1,8 +1,10 @@
 #include "gameLoop.hpp"
 #include "Texture.hpp"
 #include "dot.hpp"
+#include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_video.h>
+#include <thread>
 
 GameLoop::GameLoop() {
   gameWindow = NULL;
@@ -252,82 +254,74 @@ void GameLoop::countDown(){
   }
 }
 
-void GameLoop::loop() {
-
-  bool quit = false;
-  bool start = false;
-  bool gameOver = false;
-  bool lastPressedEsc =
-      false; // you have to press esc then enter once the game started to quit
-  Timer delayBetweenRounds;
+void GameLoop::handleInputs(){
+  static Timer inputDelayTimer;
+  if(inputDelayTimer.ElapsedMillis() < 8.0f) return;
+  inputDelayTimer.Reset();
   SDL_Event e;
+  while (SDL_PollEvent(&e) != 0) {
+    if (e.type == SDL_QUIT) {
+      quit = true;
+    } 
+  }
+  const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
+  if (!start) { // if still at start screen
+    if(keyStates[SDL_SCANCODE_ESCAPE])//escape key to quit
+      quit = true;
+    if(keyStates[SDL_SCANCODE_RETURN]){//enter key to start
+      countDown();
+      textures.erase("startPrompt");
+      start = true;
+      setScoreboardText();
+      if(gameOver){
+        gameOver = false;//if we are resetting the game
+        sb.reset();
+        setScoreboardText();
+      }
+      dot.set();
+    }
+  } else { // game started (now this is used for player controls) start = true
+      if(keyStates[SDL_SCANCODE_ESCAPE]){
+        if (lastPressedEsc){
+          return;
+        }
+        lastPressedEsc = true;
+        mainText.str("");
+        mainText << "Are you sure you want to quit? Press Enter if yes or spacebar to resume.";
+        setStartText();
+      }
+        // all the other cases now update lastPressedEsc to true because it
+        // wasnt pressed 2x in a row
+      if(keyStates[SDL_SCANCODE_RETURN] && lastPressedEsc)
+          quit = true;
+      if(keyStates[SDL_SCANCODE_W]) // start of the player controls
+        p1.move(true);
+      if(keyStates[SDL_SCANCODE_S])
+        p1.move(false);
+      if(keyStates[SDL_SCANCODE_UP])
+        p2.move(true);
+      if(keyStates[SDL_SCANCODE_DOWN])
+        p2.move(false);
+      if(keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc){
+          lastPressedEsc = false;
+          countDown();
+          textures.erase("startPrompt");//remove the escape text
+      }
+    }
+}
 
+void GameLoop::loop() {
+  quit = false;
+  start = false;
+  gameOver = false;
+  lastPressedEsc = false;
+    // you have to press esc then enter once the game started to quit
+  Timer delayBetweenRounds;
   while (!quit) {
     while(m_GameTimer.ElapsedMillis() < GAME_LOOP_DELAY);
     m_GameTimer.Reset();
-    while (SDL_PollEvent(&e) != 0) {
-      if (e.type == SDL_QUIT) {
-        quit = true;
-      } else if (e.type == SDL_KEYDOWN) {
-        if (!start) { // if still at start screen
-          switch (e.key.keysym.sym) {
-            case SDLK_ESCAPE://escape key to quit
-              quit = true;
-              break;
-            case SDLK_RETURN://enter key to start
-              countDown();
-              textures.erase("startPrompt");
-              start = true;
-              setScoreboardText();
-              if(gameOver){
-                gameOver = false;//if we are resetting the game
-                sb.reset();
-                setScoreboardText();
-              }
-              dot.set();
-              break;
-            default:
-              break;
-          }
-        } else { // game started (now this is used for player controls) start = true
-          switch (e.key.keysym.sym) {
-            case SDLK_ESCAPE:
-              if (lastPressedEsc)
-                break;
-              lastPressedEsc = true;
-              mainText.str("");
-              mainText << "Are you sure you want to quit? Press Enter if yes.";
-              setStartText();
-              break;
-              // all the other cases now update lastPressedEsc to true because it
-              // wasnt pressed 2x in a row
-            case SDLK_RETURN:
-              if (lastPressedEsc)
-                quit = true;
-              break;
-            case SDLK_w: // start of the player controls
-              p1.move(true);
-              break;
-            case SDLK_s:
-              p1.move(false);
-              break;
-            case SDLK_UP:
-              p2.move(true);
-              break;
-            case SDLK_DOWN:
-              p2.move(false);
-              break;
-            default:
-              if (lastPressedEsc) {
-                lastPressedEsc = false;
-                countDown();
-                textures.erase("startPrompt");//remove the escape text
-              }
-              break;
-          }
-        }
-      }
-    }
+    handleInputs();
+    
     if (gameOver) {
       SDL_RenderClear(gameRenderer);
       start = false;
@@ -339,7 +333,6 @@ void GameLoop::loop() {
       setStartText();
       mainText.str("");
     }
-
 
     renderTextures();
     if (start && !lastPressedEsc) {

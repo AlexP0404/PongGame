@@ -55,6 +55,7 @@ class GameLoop{
     void drawDot();
     void drawPaddles();
     void loop();
+    void handleInputs();
     void countDown();
 
   private:
@@ -76,6 +77,10 @@ class GameLoop{
     bool bounceOffPaddle;
     bool p1Scored;
     bool p1Wins;
+    bool quit;
+    bool start;
+    bool gameOver;
+    bool lastPressedEsc;
     Mix_Chunk *bounce = NULL;
     Timer m_GameTimer;
     Timer m_CollisionPaddleTimer;
