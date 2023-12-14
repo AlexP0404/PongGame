@@ -15,7 +15,7 @@ void Dot::bounce(bool isBouncePaddle){
   }
 
 
-  if(mVelX >= MAX_DOT_VEL || (mVelX * -1) >= MAX_DOT_VEL){
+  if(mVelX >= MAX_DOT_VEL+m_InitSpeed || (mVelX * -1) >= MAX_DOT_VEL+m_InitSpeed){//top speed is changed by difficulty level!
     mVelX = MAX_DOT_VEL * directionX;//hard cap
   }
   else

@@ -13,11 +13,14 @@ class Paddle : public Entity {
     Paddle& operator=(const Paddle&){
       return *this;
     }
-
+    
+    void setSpeed(int speed = 0);
     void move(bool dir) override;
     
     const int PADDLE_HEIGHT = 100;
     const int PAD_VEL = 10;
+  private:
+    int m_PaddleSpeed = 0;
 };
 
 #endif // !PADDLE_HPP

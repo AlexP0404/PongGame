@@ -3,7 +3,9 @@
 #include "dot.hpp"
 #include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_render.h>
+#include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_video.h>
+#include <exception>
 #include <thread>
 
 GameLoop::GameLoop() {
@@ -116,11 +118,13 @@ bool GameLoop::loadMedia() {
     } else {
 
       mainFont = TTF_OpenFont("lazy.ttf", 30);
-      mainText.str("");
-      mainText << "Press Enter to start!";
+      mainText.str("Press Enter to start!");
       textures["startPrompt"] = unique_ptr<Texture>
         (new Texture(*gameRenderer,0,0));//uses constructor with no parameters
       setStartText();
+      difficultySelectText.str("[Easy]\tMedium\tHard");
+      textures["difficultyPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
+      setSpeedSelectText();
       textures["speedPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
       textures["scoreBoard"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
 
@@ -161,6 +165,37 @@ void GameLoop::setStartText(){//sets the large MAIN  text to the current mainTex
       (new Texture(*gameRenderer,0,0));
     setStartText();//this is a potential infinite loop lol
   }
+}
+
+void GameLoop::setSpeedSelectText(){
+  try{
+    textures.at("difficultyPrompt")->loadFromRenderedText(difficultySelectText.str().c_str(), textColor, escFont);
+    textures.at("difficultyPrompt")->setxCoor((SCREEN_WIDTH-textures.at("difficultyPrompt")->getWidth()) / 2);//middle of screen
+    textures.at("difficultyPrompt")->setyCoor(textures.at("startPrompt")->getyCoor() + textures.at("startPrompt")->getHeight()+5);//put right below start prompt
+  }
+  catch(std::exception& e){
+    setStartText();//make sure start text is initialized so it can use its measurements
+    textures["difficultyPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
+    setSpeedSelectText();
+  }
+}
+
+void GameLoop::setSpeed(int dir){
+  static int difficulty = 1;//difficulty can be 0,1,2 (easy,medium,hard)
+  if(dir >= 1  && difficulty >= 2) return;//cant go right more
+  if(dir <= -1 && difficulty <= 0) return;//cant go left more
+  difficulty += dir;//
+
+  dot.setInitSpeed(difficulty);//changes the speed saved in dot
+  p1.setSpeed(difficulty*5);
+  p2.setSpeed(difficulty*5);//adjust speed for paddles when changing difficulty
+
+  std::string choices[3] = {"Easy", "Medium", "Hard"};
+
+  choices[difficulty] = '[' + choices[difficulty] + ']';//make the user selection obvious
+  
+  difficultySelectText.str(choices[0]+'\t'+choices[1]+'\t'+choices[2]);//update stringsream
+  setSpeedSelectText();
 }
 
 void GameLoop::drawNet() {
@@ -256,6 +291,7 @@ void GameLoop::countDown(){
 
 void GameLoop::handleInputs(){
   static Timer inputDelayTimer;
+  static Timer speedSelectDelay;
   if(inputDelayTimer.ElapsedMillis() < 8.0f) return;
   inputDelayTimer.Reset();
   SDL_Event e;
@@ -268,7 +304,16 @@ void GameLoop::handleInputs(){
   if (!start) { // if still at start screen
     if(keyStates[SDL_SCANCODE_ESCAPE])//escape key to quit
       quit = true;
+    if(keyStates[SDL_SCANCODE_LEFT] && speedSelectDelay.ElapsedMillis() > 200.0f){//debounce arrows
+      speedSelectDelay.Reset();
+      setSpeed(-1);//change speed to slower
+    } 
+    if(keyStates[SDL_SCANCODE_RIGHT] && speedSelectDelay.ElapsedMillis() > 200.0f){
+      speedSelectDelay.Reset();
+      setSpeed(1);
+    }
     if(keyStates[SDL_SCANCODE_RETURN]){//enter key to start
+      textures.erase("difficultyPrompt");//remove difficultyPrompt before countdown starts
       countDown();
       textures.erase("startPrompt");
       start = true;
@@ -286,9 +331,10 @@ void GameLoop::handleInputs(){
           return;
         }
         lastPressedEsc = true;
-        mainText.str("");
-        mainText << "Are you sure you want to quit? Press Enter if yes or spacebar to resume.";
+        mainText.str("Are you sure you want to quit?");
         setStartText();
+        difficultySelectText.str("Press Enter to confirm or spacebar to resume.");
+        setSpeedSelectText();
       }
         // all the other cases now update lastPressedEsc to true because it
         // wasnt pressed 2x in a row
@@ -304,6 +350,7 @@ void GameLoop::handleInputs(){
         p2.move(false);
       if(keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc){
           lastPressedEsc = false;
+          textures.erase("difficultyPrompt");
           countDown();
           textures.erase("startPrompt");//remove the escape text
       }
@@ -331,6 +378,7 @@ void GameLoop::loop() {
       else
         mainText << "Player 2 Wins!!! Press Enter to start again!";
       setStartText();
+      setSpeed();
       mainText.str("");
     }
 

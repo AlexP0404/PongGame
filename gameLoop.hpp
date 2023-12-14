@@ -50,6 +50,7 @@ class GameLoop{
     bool score();
     void setStartText();
     void setSpeedSelectText();
+    void setSpeed(int dir = 0);
     void drawNet();
     void setScoreboardText();
     void drawDot();
@@ -60,6 +61,7 @@ class GameLoop{
 
   private:
     std::stringstream mainText;
+    std::stringstream difficultySelectText;
     SDL_Window* gameWindow;
     SDL_Renderer* gameRenderer;
     SDL_Surface* gameIcon;
