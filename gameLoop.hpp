@@ -5,7 +5,6 @@
 //runs the game loop and calls the other classes
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_mixer.h>
 #include "Texture.hpp"
 #include "dot.hpp"
@@ -15,12 +14,12 @@
 #include <SDL2/SDL_surface.h>
 #include <iostream>
 #include <string>
-#include <sstream>
 #include <unordered_map>
 #include <memory>
 #include <exception>
 using std::unique_ptr;
 using std::unordered_map;
+using std::string;
 //need to create an "entity" class that is the base class
 //for the pong and the paddles
 //need to start multithreading for keychecking so both players
@@ -60,14 +59,14 @@ class GameLoop{
     void countDown();
 
   private:
-    std::stringstream mainText;
-    std::stringstream difficultySelectText;
+    string mainText;
+    string difficultySelectText;
     SDL_Window* gameWindow;
     SDL_Renderer* gameRenderer;
     SDL_Surface* gameIcon;
     TTF_Font* mainFont;
     TTF_Font* escFont;
-    unordered_map<std::string,unique_ptr<Texture>> textures;//map all textures on hash table
+    unordered_map<string,unique_ptr<Texture>> textures;//map all textures on hash table
     SDL_Color textColor;
     Dot dot;
     Scoreboard sb;
@@ -83,7 +82,8 @@ class GameLoop{
     bool start;
     bool gameOver;
     bool lastPressedEsc;
-    Mix_Chunk *bounce = NULL;
+    bool singlePlayer;
+    Mix_Chunk *bounce;
     Timer m_GameTimer;
     Timer m_CollisionPaddleTimer;
     Timer m_CollisionBorderTimer;

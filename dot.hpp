@@ -9,8 +9,7 @@
 //INITIALLY: moves in random direction slowly.
 //when a collision is detected: bounce() needs to do some math to figure out the direction it goes next
                               //along with the velocity of the ball.
-const int DOT_WIDTH = 20;
-const int DOT_HEIGHT = 20;
+const int DOT_RADIUS = 10;
 
 class Dot : public Entity
 {

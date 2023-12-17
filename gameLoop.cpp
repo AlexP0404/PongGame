@@ -1,37 +1,35 @@
 #include "gameLoop.hpp"
-#include "Texture.hpp"
 #include "dot.hpp"
-#include <SDL2/SDL_keyboard.h>
 #include <SDL2/SDL_render.h>
-#include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_video.h>
-#include <exception>
-#include <thread>
+#include <string>
 
 GameLoop::GameLoop() {
-  gameWindow = NULL;
-  gameRenderer = NULL;
-  mainFont = NULL;
-  escFont = NULL;
+  gameWindow = nullptr;
+  gameRenderer = nullptr;
+  mainFont = nullptr;
+  escFont = nullptr;
+  bounce = nullptr;
   bounceOffPaddle = false;
   p1Scored = false;
   p1Wins = false;
+  singlePlayer = false;
   textColor = {0xFF, 0xFF, 0xFF, 0xFF};
 }
 
 GameLoop::~GameLoop(){
   TTF_CloseFont(mainFont);
   TTF_CloseFont(escFont);
-  mainFont = NULL;
-  escFont = NULL;
+  mainFont = nullptr;
+  escFont = nullptr;
 
   Mix_FreeChunk(bounce);
-  bounce = NULL;
+  bounce = nullptr;
 
   SDL_DestroyRenderer(gameRenderer);
   SDL_DestroyWindow(gameWindow);
-  gameWindow = NULL;
-  gameRenderer = NULL;
+  gameWindow = nullptr;
+  gameRenderer = nullptr;
 
   Mix_Quit();
   TTF_Quit();
@@ -49,7 +47,7 @@ bool GameLoop::init() {
   p1.setScreen(SCREEN_WIDTH,SCREEN_HEIGHT);
   p2.setScreen(SCREEN_WIDTH,SCREEN_HEIGHT);
   dot.setScreen(SCREEN_WIDTH, SCREEN_HEIGHT);
-  dot.setSize(DOT_WIDTH, DOT_HEIGHT);
+  dot.setSize(DOT_RADIUS, DOT_RADIUS);
 
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
     printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
@@ -60,15 +58,16 @@ bool GameLoop::init() {
     }
     gameWindow = SDL_CreateWindow("Pong", SDL_WINDOWPOS_UNDEFINED,
                                   SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-                                  SCREEN_HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS);
-    if (gameWindow == NULL) {
+                                  SCREEN_HEIGHT,
+                                  SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_FOCUS);
+    if (gameWindow == nullptr) {
       printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
       success = false;
     } else {
       
       gameRenderer = SDL_CreateRenderer(
           gameWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-      if (gameRenderer == NULL) {
+      if (gameRenderer == nullptr) {
         printf("Renderer could not be created! SDL Error: %s\n",
                SDL_GetError());
         success = false;
@@ -105,7 +104,7 @@ bool GameLoop::loadMedia() {
   SDL_SetWindowIcon(gameWindow, gameIcon);
 
   escFont = TTF_OpenFont("lazy.ttf", 15);
-  if (escFont == NULL) {
+  if (escFont == nullptr) {
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
     success = false;
   } else {
@@ -118,18 +117,18 @@ bool GameLoop::loadMedia() {
     } else {
 
       mainFont = TTF_OpenFont("lazy.ttf", 30);
-      mainText.str("Press Enter to start!");
+      mainText = "Press Enter to start!";
       textures["startPrompt"] = unique_ptr<Texture>
         (new Texture(*gameRenderer,0,0));//uses constructor with no parameters
       setStartText();
-      difficultySelectText.str("[Easy]\tMedium\tHard");
+      difficultySelectText = "Easy\t[Medium]\tHard";
       textures["difficultyPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
       setSpeedSelectText();
       textures["speedPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
       textures["scoreBoard"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
 
       bounce = Mix_LoadWAV("bounce.wav");
-      if (bounce == NULL) {
+      if (bounce == nullptr) {
         printf("Failed to load bounce sound effect! SDL_mixer Error: %s\n",
                Mix_GetError());
         success = false;
@@ -156,7 +155,7 @@ void GameLoop::setScoreboardText() {
 
 void GameLoop::setStartText(){//sets the large MAIN  text to the current mainText string and adds the texture to the list of active textures
   try{
-    textures.at("startPrompt")->loadFromRenderedText(mainText.str().c_str(), textColor, mainFont);
+    textures.at("startPrompt")->loadFromRenderedText(mainText.c_str(), textColor, mainFont);
     textures.at("startPrompt")->setxCoor(( SCREEN_WIDTH - textures.at("startPrompt")->getWidth() ) / 2);
     textures.at("startPrompt")->setyCoor(( SCREEN_HEIGHT - textures.at("startPrompt")->getHeight() ) / 2);
   }
@@ -169,7 +168,7 @@ void GameLoop::setStartText(){//sets the large MAIN  text to the current mainTex
 
 void GameLoop::setSpeedSelectText(){
   try{
-    textures.at("difficultyPrompt")->loadFromRenderedText(difficultySelectText.str().c_str(), textColor, escFont);
+    textures.at("difficultyPrompt")->loadFromRenderedText(difficultySelectText.c_str(), textColor, escFont);
     textures.at("difficultyPrompt")->setxCoor((SCREEN_WIDTH-textures.at("difficultyPrompt")->getWidth()) / 2);//middle of screen
     textures.at("difficultyPrompt")->setyCoor(textures.at("startPrompt")->getyCoor() + textures.at("startPrompt")->getHeight()+5);//put right below start prompt
   }
@@ -194,7 +193,7 @@ void GameLoop::setSpeed(int dir){
 
   choices[difficulty] = '[' + choices[difficulty] + ']';//make the user selection obvious
   
-  difficultySelectText.str(choices[0]+'\t'+choices[1]+'\t'+choices[2]);//update stringsream
+  difficultySelectText = choices[0]+'\t'+choices[1]+'\t'+choices[2];//update stringsream
   setSpeedSelectText();
 }
 
@@ -213,10 +212,99 @@ void GameLoop::drawPaddles() {
   SDL_RenderFillRect(gameRenderer, &p2Rect);
 }
 
-void GameLoop::drawDot() {
-  dotRect = {dot.getPosX(), dot.getPosY(), dot.getSizeX(), dot.getSizeY()};
-  SDL_RenderFillRect(gameRenderer, &dotRect);
+void GameLoop::drawDot(){
+  //https://www.ferzkopp.net/Software/SDL2_gfx/Docs/html/_s_d_l2__gfx_primitives_8c_source.html#l01457
+  //used SDL_gfx filledCircle but didn't want to include the whole library just for the circle so I edited it to use it here
+  short cx = 0;
+  short cy = DOT_RADIUS;
+  short ocx = (short) 0xffff;
+  short ocy = (short) 0xffff;
+  short df = 1 - DOT_RADIUS;
+  short d_e = 3;
+  short d_se = -2 * DOT_RADIUS + 5;
+  short xpcx, xmcx, xpcy, xmcy;
+  short ypcy, ymcy, ypcx, ymcx;
+
+   do {
+    xpcx = dot.getPosX() + cx;
+    xmcx = dot.getPosX() - cx;
+    xpcy = dot.getPosX() + cy;
+    xmcy = dot.getPosX() - cy;
+    if (ocy != cy) {
+      if (cy > 0) {
+        ypcy = dot.getPosY() + cy;
+        ymcy = dot.getPosY() - cy;
+        SDL_RenderDrawLine(gameRenderer,xmcx,ypcy,xpcx,ypcy);
+        SDL_RenderDrawLine(gameRenderer,xmcx,ymcy,xpcx,ymcy);
+      }
+      else{
+        SDL_RenderDrawLine(gameRenderer, xmcx, dot.getPosY(), xpcx, dot.getPosY());
+      }
+      ocy = cy;
+    }
+    if(ocx != cx){
+      if (cx != cy) {
+        if (cx > 0) {
+          ypcx = dot.getPosY() + cx;
+          ymcx = dot.getPosY() - cx;
+          SDL_RenderDrawLine(gameRenderer, xmcy,ymcx, xpcy, ymcx);
+          SDL_RenderDrawLine(gameRenderer, xmcy,ypcx ,xpcy, ypcx);
+        } else {
+          SDL_RenderDrawLine(gameRenderer, xmcy,dot.getPosY(), xpcy, dot.getPosY());
+        }
+      }
+      ocx = cx;
+    }
+    if(df<0){
+      df += d_e;
+      d_e += 2;
+      d_se += 2;
+    }
+    else{
+      df += d_se;
+      d_e += 2;
+      d_se += 4;
+      cy--;
+    }
+    cx++;
+  }while(cx <= cy);
+
 }
+
+/* void GameLoop::drawDot() {
+  // dotRect = {dot.getPosX(), dot.getPosY(), dot.getSizeX(), dot.getSizeY()};
+  // SDL_RenderFillRect(gameRenderer, &dotRect);
+  const int diameter = DOT_RADIUS*2;
+
+  int x = DOT_RADIUS - 1;
+  int y = 0;
+  int tx = 1;
+  int ty = 1;
+  int error = (tx - diameter);
+
+  while(x >= y){
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + x, dot.getPosY() - y);
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + x, dot.getPosY() + y);
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - x, dot.getPosY() - y);
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - x, dot.getPosY() + y);
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + y, dot.getPosY() - x);
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + y, dot.getPosY() + x);
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - y, dot.getPosY() - x);
+    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - y, dot.getPosY() + x);
+
+    if(error <= 0){
+      ++y;
+      error += ty;
+      ty += 2;
+    }
+    if(error > 0){
+      --x;
+      tx += 2;
+      error += (tx - diameter);
+    }
+  }
+
+} */
 
 void GameLoop::renderTextures() {
   SDL_SetRenderDrawColor(gameRenderer, 0, 0, 0, 0xFF);
@@ -229,16 +317,16 @@ void GameLoop::renderTextures() {
 
 bool GameLoop::collision(){
   if(m_CollisionPaddleTimer.ElapsedMillis() > COLLISION_CHECK_DELAY){
-    if(dot.getPosX() <= PADDLE_OFFSET + PADDLE_WIDTH + 2 && dot.getPosX() >= PADDLE_OFFSET){//check for paddle collisions
-      if(dot.getPosY() >= p1.getPosY() - DOT_HEIGHT && dot.getPosY() <= p1.getPosY() + PADDLE_HEIGHT){
+    if(dot.getPosX() - DOT_RADIUS <= PADDLE_OFFSET + PADDLE_WIDTH + 2 && dot.getPosX() + DOT_RADIUS >= PADDLE_OFFSET){//check for paddle collisions
+      if(dot.getPosY() + DOT_RADIUS >= p1.getPosY() - DOT_RADIUS && dot.getPosY() - DOT_RADIUS <= p1.getPosY() + PADDLE_HEIGHT){
         if(!bounceOffPaddle)
           m_CollisionPaddleTimer.Reset();
         bounceOffPaddle = true;
         return true;
       }
     }
-    if(dot.getPosX() >= SCREEN_WIDTH - PADDLE_OFFSET - 2 && dot.getPosX() <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
-      if(dot.getPosY() >= p2.getPosY() - DOT_HEIGHT && dot.getPosY() <= p2.getPosY() + PADDLE_HEIGHT){
+    if(dot.getPosX() + DOT_RADIUS >= SCREEN_WIDTH - PADDLE_OFFSET - 2 && dot.getPosX() - DOT_RADIUS <= SCREEN_WIDTH - PADDLE_OFFSET + PADDLE_WIDTH){
+      if(dot.getPosY() + DOT_RADIUS >= p2.getPosY() - DOT_RADIUS && dot.getPosY() - DOT_RADIUS <= p2.getPosY() + PADDLE_HEIGHT){
         if(!bounceOffPaddle)
           m_CollisionPaddleTimer.Reset();
         bounceOffPaddle = true;
@@ -247,7 +335,7 @@ bool GameLoop::collision(){
     }
   }
   if(m_CollisionBorderTimer.ElapsedMillis() > COLLISION_CHECK_DELAY){
-    if(dot.getPosY() + DOT_HEIGHT >= SCREEN_HEIGHT || dot.getPosY() < DOT_HEIGHT){//bounce off top or bottom walls
+    if(dot.getPosY() + DOT_RADIUS >= SCREEN_HEIGHT || dot.getPosY() < DOT_RADIUS){//bounce off top or bottom walls
       //std::cout << dot.getPosY() << " ";
 
       if (dot.getPosY() > SCREEN_HEIGHT / 2) // on the bottom half of the screen
@@ -279,8 +367,8 @@ void GameLoop::countDown(){
   int countDownSeconds = 3;
   Timer countDownTimer;
   for(int i = countDownSeconds; i >= 0; i--){
-    mainText.str("");
-    mainText << "Starting in " << i;
+    mainText.clear();
+    mainText = "Starting in " + std::to_string(i);
     setStartText();
     while(countDownTimer.ElapsedMillis() < 1000.0f);
     countDownTimer.Reset();
@@ -331,9 +419,9 @@ void GameLoop::handleInputs(){
           return;
         }
         lastPressedEsc = true;
-        mainText.str("Are you sure you want to quit?");
+        mainText = "Are you sure you want to quit?";
         setStartText();
-        difficultySelectText.str("Press Enter to confirm or spacebar to resume.");
+        difficultySelectText = "Press Enter to confirm or spacebar to resume.";
         setSpeedSelectText();
       }
         // all the other cases now update lastPressedEsc to true because it
@@ -344,10 +432,12 @@ void GameLoop::handleInputs(){
         p1.move(true);
       if(keyStates[SDL_SCANCODE_S])
         p1.move(false);
-      if(keyStates[SDL_SCANCODE_UP])
-        p2.move(true);
-      if(keyStates[SDL_SCANCODE_DOWN])
-        p2.move(false);
+      if(!singlePlayer){
+        if(keyStates[SDL_SCANCODE_UP])
+          p2.move(true);
+        if(keyStates[SDL_SCANCODE_DOWN])
+          p2.move(false);
+      }
       if(keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc){
           lastPressedEsc = false;
           textures.erase("difficultyPrompt");
@@ -374,12 +464,12 @@ void GameLoop::loop() {
       start = false;
       textures.erase("scoreBoard");
       if (p1Wins)
-        mainText << "Player 1 Wins!!! Press Enter to start again!";
+        mainText = "Player 1 Wins!!! Press Enter to start again!";
       else
-        mainText << "Player 2 Wins!!! Press Enter to start again!";
+        mainText = "Player 2 Wins!!! Press Enter to start again!";
       setStartText();
       setSpeed();
-      mainText.str("");
+      mainText.clear();
     }
 
     renderTextures();
