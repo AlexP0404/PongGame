@@ -37,6 +37,7 @@ class Entity {
     int getScreenW() { return mScreenW; }
     int getScreenH() { return mScreenH; }
     inline bool genRandBool() { return mRandDev() % 10 > 5; } //50/50 to be true or false
+    inline int genRandNum(int maxVal) { return mRandDev() % maxVal; }
   protected:
     int mSizeX;
     int mSizeY;

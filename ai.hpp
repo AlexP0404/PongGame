@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "paddle.hpp"
+#include <exception>
 
 //this will control the second paddle when the user selects single player.
 //it will mathematically determine where to place the paddle based on where the dot bounced off the border

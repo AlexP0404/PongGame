@@ -317,6 +317,9 @@ bool GameLoop::collision(){
 }
 
 bool GameLoop::score() {
+  if(dot.getPosX() > p2.getPosX()){
+    std::cout << "Dot Y pos: " << dot.getPosY() << '\n';
+  }
   if (dot.getPosX() <= 0) {
     p1Scored = false; // p2 scored on p1
     return true;
@@ -407,8 +410,10 @@ void GameLoop::handleInputs(){
           p2.move(false);
       }
       else{//singleplayer
-        ai1.movePaddle();
-        ai1.movePaddle();
+        int numAImoves = p2.genRandNum(5); 
+        for(int i = 0; i < numAImoves; i++)
+          ai1.movePaddle();
+        // std::cout << "Pos after move: "<< p2.getPosY() << '\n';
       }
       if(keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc){
           lastPressedEsc = false;
@@ -435,13 +440,9 @@ void GameLoop::loop() {
       SDL_RenderClear(gameRenderer);
       start = false;
       textures.erase("scoreBoard");
-      if (p1Wins)
-        mainText = "Player 1 Wins!!! Press Enter to start again!";
-      else
-        mainText = "Player 2 Wins!!! Press Enter to start again!";
+      mainText = "Player" + (p1Wins ? string(" 1 ") : string(" 2 ")) + "Wins!!! Press Enter to start again!";
       setStartText();
       setSpeed();
-      mainText.clear();
     }
 
     renderTextures();
