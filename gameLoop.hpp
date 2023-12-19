@@ -3,20 +3,22 @@
 //deals with window/render initializing
 //deals with allocating/deallocating textures
 //runs the game loop and calls the other classes
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#include "Texture.hpp"
-#include "dot.hpp"
-#include "paddle.hpp"
-#include "scoreboard.hpp"
-#include "timer.hpp"
-#include <SDL2/SDL_surface.h>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <memory>
 #include <exception>
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_surface.h>
+
+#include "Texture.hpp"
+#include "dot.hpp"
+#include "ai.hpp"//has paddle included already (I know I could include both because of header guards but whatevs)
+#include "scoreboard.hpp"
+#include "timer.hpp"
+
 using std::unique_ptr;
 using std::unordered_map;
 using std::string;
@@ -59,22 +61,26 @@ class GameLoop{
     void countDown();
 
   private:
-    string mainText;
-    string difficultySelectText;
     SDL_Window* gameWindow;
     SDL_Renderer* gameRenderer;
     SDL_Surface* gameIcon;
     TTF_Font* mainFont;
     TTF_Font* escFont;
-    unordered_map<string,unique_ptr<Texture>> textures;//map all textures on hash table
     SDL_Color textColor;
+    SDL_Rect p1Rect;
+    SDL_Rect p2Rect;
+    SDL_Rect dotRect;
+    
+    unordered_map<string,unique_ptr<Texture>> textures;//map all textures on hash table
+    
     Dot dot;
     Scoreboard sb;
     Paddle p1;
     Paddle p2;
-    SDL_Rect p1Rect;
-    SDL_Rect p2Rect;
-    SDL_Rect dotRect;
+    AI ai1;  
+
+    string mainText;
+    string difficultySelectText;
     bool bounceOffPaddle;
     bool p1Scored;
     bool p1Wins;

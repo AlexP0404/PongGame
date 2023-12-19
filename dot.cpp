@@ -37,6 +37,10 @@ void Dot::setInitSpeed(int speed){
   this->m_InitSpeed = speed;
 }
 
+bool Dot::getDirectionX(){
+  return directionX > 0;//true = going right
+}
+
 void Dot::set(){//starts the dot out slowly in a random direction (probably lean more towards the players)
   mPosX = mScreenW / 2;
   mPosY = mScreenH / 2;

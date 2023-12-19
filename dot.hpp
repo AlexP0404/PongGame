@@ -22,7 +22,7 @@ class Dot : public Entity
     void set();
     void move(bool dir = false) override;//move faster the longer it goes without resetting (scoring)
     void setInitSpeed(int speed = 2);
-
+    bool getDirectionX();
     const int MAX_DOT_VEL = 5;
   
   private:

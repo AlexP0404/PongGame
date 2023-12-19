@@ -1,5 +1,5 @@
 #OBJS specifies which files to compile as part of the project
-OBJS = main.o dot.o gameLoop.o scoreboard.o Texture.o paddle.o 
+OBJS = main.o dot.o gameLoop.o scoreboard.o Texture.o paddle.o ai.o 
 #CXX specifies which compiler we're using
 CXX = g++
 
@@ -31,6 +31,7 @@ gameLoop : gameLoop.cpp gameLoop.o
 scoreboard : scoreboard.cpp scoreboard.o
 paddle : paddle.cpp paddle.o
 texture : Texture.cpp Texture.o
+ai : ai.cpp ai.o
 #timer : Timer.hpp
 
 

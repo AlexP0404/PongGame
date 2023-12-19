@@ -271,41 +271,6 @@ void GameLoop::drawDot(){
 
 }
 
-/* void GameLoop::drawDot() {
-  // dotRect = {dot.getPosX(), dot.getPosY(), dot.getSizeX(), dot.getSizeY()};
-  // SDL_RenderFillRect(gameRenderer, &dotRect);
-  const int diameter = DOT_RADIUS*2;
-
-  int x = DOT_RADIUS - 1;
-  int y = 0;
-  int tx = 1;
-  int ty = 1;
-  int error = (tx - diameter);
-
-  while(x >= y){
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + x, dot.getPosY() - y);
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + x, dot.getPosY() + y);
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - x, dot.getPosY() - y);
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - x, dot.getPosY() + y);
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + y, dot.getPosY() - x);
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() + y, dot.getPosY() + x);
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - y, dot.getPosY() - x);
-    SDL_RenderDrawPoint(gameRenderer, dot.getPosX() - y, dot.getPosY() + x);
-
-    if(error <= 0){
-      ++y;
-      error += ty;
-      ty += 2;
-    }
-    if(error > 0){
-      --x;
-      tx += 2;
-      error += (tx - diameter);
-    }
-  }
-
-} */
-
 void GameLoop::renderTextures() {
   SDL_SetRenderDrawColor(gameRenderer, 0, 0, 0, 0xFF);
   SDL_RenderClear(gameRenderer);
@@ -405,6 +370,9 @@ void GameLoop::handleInputs(){
       countDown();
       textures.erase("startPrompt");
       start = true;
+      singlePlayer = true;
+      if(singlePlayer)
+        ai1.setPaddle(&p2);
       setScoreboardText();
       if(gameOver){
         gameOver = false;//if we are resetting the game
@@ -437,6 +405,10 @@ void GameLoop::handleInputs(){
           p2.move(true);
         if(keyStates[SDL_SCANCODE_DOWN])
           p2.move(false);
+      }
+      else{//singleplayer
+        ai1.movePaddle();
+        ai1.movePaddle();
       }
       if(keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc){
           lastPressedEsc = false;
@@ -478,6 +450,9 @@ void GameLoop::loop() {
       if(collision()){//this compares the positions of the dot and the walls and paddles and checks for a collision
         dot.bounce(bounceOffPaddle);
         Mix_PlayChannel(-1, bounce, 0);
+        if(!bounceOffPaddle){
+          ai1.setDotBounceX(dot.getDirectionX(),dot.getPosX(),dot.getPosY() < SCREEN_HEIGHT/2);//if bounce off the top, dot Y pos = 0
+        }
         // std::cout << "COLLISION: " << ((bounceOffPaddle) ? "PADDLE\n" : "BORDER\n");
       }
       if (score()) { // this needs to compare the position of the dot and the

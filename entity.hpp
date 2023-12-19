@@ -34,6 +34,8 @@ class Entity {
     int getPosY() { return mPosY; }
     int getSizeX() { return mSizeX; }
     int getSizeY() { return mSizeY; }
+    int getScreenW() { return mScreenW; }
+    int getScreenH() { return mScreenH; }
     inline bool genRandBool() { return mRandDev() % 10 > 5; } //50/50 to be true or false
   protected:
     int mSizeX;
