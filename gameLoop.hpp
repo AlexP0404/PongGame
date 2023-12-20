@@ -43,20 +43,24 @@ class GameLoop{
   public:
     GameLoop();
     ~GameLoop();
-    
-    void renderTextures();
+
     bool init();
     bool loadMedia();
+    void loop();
+  
+  private:
+    void renderTextures();
     bool collision();
     bool score();
     void setStartText();
+    void setScoreboardText();
+    void setModeSelectText();
+    void setMode();
     void setSpeedSelectText();
     void setSpeed(int dir = 0);
     void drawNet();
-    void setScoreboardText();
     void drawDot();
     void drawPaddles();
-    void loop();
     void handleInputs();
     void countDown();
 
@@ -81,6 +85,9 @@ class GameLoop{
 
     string mainText;
     string difficultySelectText;
+    string modeSelectText;
+     
+    int modeSelection;
     bool bounceOffPaddle;
     bool p1Scored;
     bool p1Wins;

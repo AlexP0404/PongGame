@@ -14,6 +14,7 @@ GameLoop::GameLoop() {
   p1Scored = false;
   p1Wins = false;
   singlePlayer = false;
+  modeSelection = 1;
   textColor = {0xFF, 0xFF, 0xFF, 0xFF};
 }
 
@@ -121,10 +122,15 @@ bool GameLoop::loadMedia() {
       textures["startPrompt"] = unique_ptr<Texture>
         (new Texture(*gameRenderer,0,0));//uses constructor with no parameters
       setStartText();
+      
       difficultySelectText = "Easy\t[Medium]\tHard";
       textures["difficultyPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
       setSpeedSelectText();
-      textures["speedPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
+      
+      modeSelectText = "[1 - Local Multiplayer]\t2 - Singleplayer"; 
+      textures["modeSelectPrompt"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
+      setModeSelectText();
+
       textures["scoreBoard"] = unique_ptr<Texture>(new Texture(*gameRenderer,0,0));
 
       bounce = Mix_LoadWAV("bounce.wav");
@@ -164,6 +170,40 @@ void GameLoop::setStartText(){//sets the large MAIN  text to the current mainTex
       (new Texture(*gameRenderer,0,0));
     setStartText();//this is a potential infinite loop lol
   }
+}
+
+void GameLoop::setModeSelectText(){
+  try{
+    textures.at("modeSelectPrompt")->loadFromRenderedText(modeSelectText.c_str(), textColor, escFont);
+    textures.at("modeSelectPrompt")->setxCoor(( SCREEN_WIDTH - textures.at("modeSelectPrompt")->getWidth() ) / 2);
+    textures.at("modeSelectPrompt")->setyCoor(textures.at("difficultyPrompt")->getyCoor()+textures.at("difficultyPrompt")->getHeight()+5);
+  }
+  catch(std::exception& e){
+    setSpeedSelectText();//make sure this is initialized beforehand 
+    textures["modeSelectPrompt"] = unique_ptr<Texture>
+      (new Texture(*gameRenderer,0,0));
+    setModeSelectText();//this is a potential infinite loop lol
+  }
+}
+
+void GameLoop::setMode(){
+  switch(modeSelection){
+    case 0:
+    //online?
+    case 1:
+      singlePlayer = false;
+      break;
+    case 2:
+    default:
+      singlePlayer = true;
+      break;
+  }
+
+  std::string choices[3] = { " ", "1 - Local Multiplayer", "2 - Singleplayer"};
+
+  choices[modeSelection] = '[' + choices[modeSelection] + ']';
+  modeSelectText = choices[1] + '\t' + choices[2];//this can be changes to add online multiplayer in the future
+  setModeSelectText();
 }
 
 void GameLoop::setSpeedSelectText(){
@@ -344,7 +384,7 @@ void GameLoop::countDown(){
 
 void GameLoop::handleInputs(){
   static Timer inputDelayTimer;
-  static Timer speedSelectDelay;
+  static Timer selectionDelay;
   if(inputDelayTimer.ElapsedMillis() < 8.0f) return;
   inputDelayTimer.Reset();
   SDL_Event e;
@@ -357,20 +397,31 @@ void GameLoop::handleInputs(){
   if (!start) { // if still at start screen
     if(keyStates[SDL_SCANCODE_ESCAPE])//escape key to quit
       quit = true;
-    if(keyStates[SDL_SCANCODE_LEFT] && speedSelectDelay.ElapsedMillis() > 200.0f){//debounce arrows
-      speedSelectDelay.Reset();
+    if(keyStates[SDL_SCANCODE_LEFT] && selectionDelay.ElapsedMillis() > 200.0f){//debounce arrows
+      selectionDelay.Reset();
       setSpeed(-1);//change speed to slower
     } 
-    if(keyStates[SDL_SCANCODE_RIGHT] && speedSelectDelay.ElapsedMillis() > 200.0f){
-      speedSelectDelay.Reset();
+    if(keyStates[SDL_SCANCODE_RIGHT] && selectionDelay.ElapsedMillis() > 200.0f){
+      selectionDelay.Reset();
       setSpeed(1);
     }
+    if(keyStates[SDL_SCANCODE_1] && selectionDelay.ElapsedMillis() > 200.0f){
+      selectionDelay.Reset();
+      modeSelection = 1;
+      setMode();
+    }
+    if(keyStates[SDL_SCANCODE_2] && selectionDelay.ElapsedMillis() > 200.0f){
+      selectionDelay.Reset();
+      modeSelection = 2;
+      setMode();
+    }
+
     if(keyStates[SDL_SCANCODE_RETURN]){//enter key to start
+      textures.erase("modeSelectPrompt");
       textures.erase("difficultyPrompt");//remove difficultyPrompt before countdown starts
       countDown();
       textures.erase("startPrompt");
       start = true;
-      singlePlayer = true;
       if(singlePlayer)
         ai1.setPaddle(&p2);
       setScoreboardText();
@@ -439,6 +490,7 @@ void GameLoop::loop() {
       mainText = "Player" + (p1Wins ? string(" 1 ") : string(" 2 ")) + "Wins!!! Press Enter to start again!";
       setStartText();
       setSpeed();
+      setMode();
     }
 
     renderTextures();
