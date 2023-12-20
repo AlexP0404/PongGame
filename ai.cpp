@@ -14,23 +14,17 @@ void AI::setPaddle(Paddle* paddle){
   if(!paddle) throw std::runtime_error("Paddle pointer not initialized!"); 
 
   m_AIpaddle = paddle;
-  m_ScreenRatio = static_cast<float>(m_AIpaddle->getScreenH()) / m_AIpaddle->getScreenW();
-  //by default is 0.75
-  std::cout << "Screen Ratio " << m_ScreenRatio << '\n';
 }
 
 void AI::setDotBounceX(bool dotDirection, int dotBounceX, bool bounceOffTop){
   if(dotDirection != m_RightPaddle) return;//only matters if heading in the same direction as paddle
   //dot bounces in 90 degree angle,
   //target y is ratio to dot bounce x and screenHeight/screenWidth
-  m_TargetPaddleY = dotBounceX * ((dotBounceX > m_AIpaddle->getScreenW() / 2)
-    ? m_ScreenRatio : m_ScreenRatio + 0.1);// + m_AIpaddle->getPosX();
-  if(bounceOffTop){ 
-    m_TargetPaddleY = m_AIpaddle->getScreenH() - m_TargetPaddleY;// - m_AIpaddle->getSizeY();
-  }
-  std::cout << "Dot bounced X : " << dotBounceX << '\n';
-  std::cout << "Target: " << m_TargetPaddleY << " Bounce off top: " << (bounceOffTop ? "True" : "False") << '\n';
-  std::cout << "Current Pos: " << m_AIpaddle->getPosY() << '\n'; 
+  m_TargetPaddleY = std::abs(m_AIpaddle->getPosX() - dotBounceX); 
+  if(!bounceOffTop){ 
+    m_TargetPaddleY = m_AIpaddle->getScreenH() - m_TargetPaddleY - 50;// - m_AIpaddle->getSizeY();
+  }//
+  //distance between dot bounce x and paddle = to paddle y target?
 }
 
 void AI::movePaddle(){
