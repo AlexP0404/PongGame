@@ -14,6 +14,7 @@ void AI::setPaddle(Paddle* paddle){
   if(!paddle) throw std::runtime_error("Paddle pointer not initialized!"); 
 
   m_AIpaddle = paddle;
+  m_TargetPaddleY = m_AIpaddle->getScreenH() / 2;//start paddle in middle of the screen
 }
 
 void AI::setDotBounceX(bool dotDirection, int dotBounceX, bool bounceOffTop){

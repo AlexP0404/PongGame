@@ -112,13 +112,13 @@ bool GameLoop::loadMedia() {
     textures["escapePrompt"] = unique_ptr<Texture>
       (new Texture(*gameRenderer,0,0));//uses full parameter constructor
     if (!textures.at("escapePrompt")->loadFromRenderedText(
-        "Press Escape to quit",textColor, escFont)) {
+        "Press Escape To Quit",textColor, escFont)) {
       printf("Failed to render text texture!\n");
       success = false;
     } else {
 
       mainFont = TTF_OpenFont("lazy.ttf", 30);
-      mainText = "Press Enter to start!";
+      mainText = "Press Enter To Start!";
       textures["startPrompt"] = unique_ptr<Texture>
         (new Texture(*gameRenderer,0,0));//uses constructor with no parameters
       setStartText();
@@ -438,9 +438,9 @@ void GameLoop::handleInputs(){
           return;
         }
         lastPressedEsc = true;
-        mainText = "Are you sure you want to quit?";
+        mainText = "Are You Sure You Want To Quit?";
         setStartText();
-        difficultySelectText = "Press Enter to confirm or spacebar to resume.";
+        difficultySelectText = "Press Enter To Confirm Or Spacebar To Resume.";
         setSpeedSelectText();
       }
         // all the other cases now update lastPressedEsc to true because it
@@ -487,7 +487,7 @@ void GameLoop::loop() {
       SDL_RenderClear(gameRenderer);
       start = false;
       textures.erase("scoreBoard");
-      mainText = "Player" + (p1Wins ? string(" 1 ") : string(" 2 ")) + "Wins!!! Press Enter to start again!";
+      mainText = "Player" + (p1Wins ? string(" 1 ") : string(" 2 ")) + "Wins!!! Press Enter To Start Again!";
       setStartText();
       setSpeed();
       setMode();
