@@ -20,13 +20,8 @@
 using std::string;
 using std::unique_ptr;
 using std::unordered_map;
-// need to create an "entity" class that is the base class
-// for the pong and the paddles
-// need to start multithreading for keychecking so both players
-// can move at once
-// make the game loop based on timers instead of framerate
-// fix collision with outter boundaries of the window
 // then add networking (UDP?) to make it online multiplayer
+// Move rendering/non-gameloop-mechanics to "Render" class
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 960;
