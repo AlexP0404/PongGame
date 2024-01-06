@@ -14,6 +14,7 @@
 #include "Texture.hpp"
 #include "ai.hpp" //has paddle included already (I know I could include both because of header guards but whatevs)
 #include "dot.hpp"
+#include "engine.hpp"
 #include "scoreboard.hpp"
 #include "timer.hpp"
 
@@ -58,6 +59,7 @@ private:
   void countDown();
 
 private:
+  Engine engine;
   SDL_Window *gameWindow;
   SDL_Renderer *gameRenderer;
   SDL_Surface *gameIcon;

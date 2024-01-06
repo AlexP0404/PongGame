@@ -46,51 +46,11 @@ bool GameLoop::init() {
   dot.setScreen(SCREEN_WIDTH, SCREEN_HEIGHT);
   dot.setSize(DOT_RADIUS, DOT_RADIUS);
 
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-    printf("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
-    success = false;
-  } else {
-    if (!SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1")) {
-      printf("Warning: Linear texture filtering not enabled!");
-    }
-    gameWindow = SDL_CreateWindow(
-        "Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH,
-        SCREEN_HEIGHT,
-        SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_FOCUS);
-    if (gameWindow == nullptr) {
-      printf("Window could not be created! SDL Error: %s\n", SDL_GetError());
-      success = false;
-    } else {
+  engine.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+  engine.init();
 
-      gameRenderer = SDL_CreateRenderer(
-          gameWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-      if (gameRenderer == nullptr) {
-        printf("Renderer could not be created! SDL Error: %s\n",
-               SDL_GetError());
-        success = false;
-      } else {
-        SDL_SetRenderDrawColor(gameRenderer, 0x00, 0x00, 0x00, 0xFF);
-        int imgFlags = IMG_INIT_PNG;
-        if (!(IMG_Init(imgFlags) & imgFlags)) {
-          printf("SDL_image could not initialize! SDL_image Error: %s\n",
-                 IMG_GetError());
-          success = false;
-        }
-        if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-          printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n",
-                 Mix_GetError());
-          success = false;
-        }
-        if (TTF_Init() == -1) {
-          printf("SDL_ttf could not initialize! SDL_ttf Error: %s\n",
-                 TTF_GetError());
-          success = false;
-        }
-      }
-    }
-  }
   m_GameTimer.Reset();
-  return success;
+  return success && loadMedia();
 }
 
 bool GameLoop::loadMedia() {
@@ -104,8 +64,8 @@ bool GameLoop::loadMedia() {
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
     success = false;
   } else {
-    textures["escapePrompt"] = unique_ptr<Texture>(
-        new Texture(*gameRenderer, 0, 0)); // uses full parameter constructor
+    textures["escapePrompt"] = unique_ptr<Texture>(new Texture(
+        *gameRenderer, 0, 0, true)); // uses full parameter constructor
     if (!textures.at("escapePrompt")
              ->loadFromRenderedText("Press Escape To Quit", textColor,
                                     escFont)) {
@@ -116,21 +76,21 @@ bool GameLoop::loadMedia() {
       mainFont = TTF_OpenFont("lazy.ttf", 30);
       mainText = "Press Enter To Start!";
       textures["startPrompt"] = unique_ptr<Texture>(new Texture(
-          *gameRenderer, 0, 0)); // uses constructor with no parameters
+          *gameRenderer, 0, 0, true)); // uses constructor with no parameters
       setStartText();
 
       difficultySelectText = "Easy\t[Medium]\tHard";
       textures["difficultyPrompt"] =
-          unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0));
+          unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
       setSpeedSelectText();
 
       modeSelectText = "[1 - Local Multiplayer]\t2 - Singleplayer";
       textures["modeSelectPrompt"] =
-          unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0));
+          unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
       setModeSelectText();
 
       textures["scoreBoard"] =
-          unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0));
+          unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
 
       bounce = Mix_LoadWAV("bounce.wav");
       if (bounce == nullptr) {
@@ -155,7 +115,7 @@ void GameLoop::setScoreboardText() {
         ->setyCoor(150); // more towards the top of the screen
   } catch (std::exception &e) {
     textures["scoreBoard"] =
-        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0));
+        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
     setScoreboardText(); // this is a potential infinite loop lol
   }
 }
@@ -173,7 +133,7 @@ void GameLoop::setStartText() { // sets the large MAIN  text to the current
                    2);
   } catch (std::exception &e) {
     textures["startPrompt"] =
-        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0));
+        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
     setStartText(); // this is a potential infinite loop lol
   }
 }
@@ -191,7 +151,7 @@ void GameLoop::setModeSelectText() {
   } catch (std::exception &e) {
     setSpeedSelectText(); // make sure this is initialized beforehand
     textures["modeSelectPrompt"] =
-        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0));
+        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
     setModeSelectText(); // this is a potential infinite loop lol
   }
 }
@@ -235,7 +195,7 @@ void GameLoop::setSpeedSelectText() {
     setStartText(); // make sure start text is initialized so it can use its
                     // measurements
     textures["difficultyPrompt"] =
-        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0));
+        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
     setSpeedSelectText();
   }
 }
@@ -456,7 +416,8 @@ void GameLoop::handleInputs() {
     if (keyStates[SDL_SCANCODE_RETURN]) { // enter key to start
       textures.erase("modeSelectPrompt");
       textures.erase("difficultyPrompt"); // remove difficultyPrompt before
-                                          // countdown starts
+      engine.eraseTextures(
+          {"modeSelectPrompt", "difficultyPrompt"}); // countdown starts
       countDown();
       textures.erase("startPrompt");
       start = true;
