@@ -1,9 +1,5 @@
 #include "engine.hpp"
-#include <SDL2/SDL_render.h>
-#include <SDL2/SDL_ttf.h>
-#include <filesystem>
 #include <iostream>
-#include <memory>
 
 Engine::Engine() {
   gameWindow = nullptr;
@@ -23,6 +19,11 @@ Engine::Engine(const int screenWidth, const int screenHeight)
 }
 
 Engine::~Engine() {
+  for (auto &[name, font] : fonts) {
+    TTF_CloseFont(font);
+    font = nullptr;
+  }
+
   Mix_FreeChunk(bounce);
   bounce = nullptr;
 
@@ -90,8 +91,7 @@ bool Engine::loadMedia() {
   gameIcon = IMG_Load("dot.bmp");
   SDL_SetWindowIcon(gameWindow, gameIcon);
 
-  fonts["escFont"] =
-      unique_ptr<TTF_Font, FontDeleter>(TTF_OpenFont("lazy.ttf", 15));
+  fonts["escFont"] = TTF_OpenFont("lazy.ttf", 15);
   if (fonts.at("escFont") == nullptr) {
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
     return false;
@@ -100,13 +100,12 @@ bool Engine::loadMedia() {
       *gameRenderer, 0, 0, true)); // uses full parameter constructor
   if (!textures.at("escapePrompt")
            ->loadFromRenderedText("Press Escape To Quit", textColor,
-                                  fonts.at("escFont").get())) {
+                                  fonts.at("escFont"))) {
     printf("Failed to render text texture!\n");
     return false;
   }
 
-  fonts["mainFont"] =
-      unique_ptr<TTF_Font, FontDeleter>(TTF_OpenFont("lazy.ttf", 30));
+  fonts["mainFont"] = TTF_OpenFont("lazy.ttf", 30);
 
   bounce = Mix_LoadWAV("bounce.wav");
   if (bounce == nullptr) {
@@ -145,12 +144,11 @@ bool Engine::setTextTexture(const string &&textureName, const string &&fontName,
   if (fonts.find(fontName) == fonts.end()) {
     std::cout << "Invalid font given! Using default font!\n";
     return textures.at(textureName)
-        ->loadFromRenderedText(text.c_str(), textColor,
-                               fonts.at(fontName).get());
+        ->loadFromRenderedText(text.c_str(), textColor, fonts.at(fontName));
   }
 
   return textures.at(textureName)
-      ->loadFromRenderedText(text.c_str(), textColor, fonts.at(fontName).get());
+      ->loadFromRenderedText(text.c_str(), textColor, fonts.at(fontName));
 }
 
 bool Engine::createTextureFromFile(const string &&textureName,

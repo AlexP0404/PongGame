@@ -75,7 +75,7 @@ private:
   Mix_Chunk *bounce;
   unordered_map<string, unique_ptr<Texture>>
       textures; // map all textures on hash table
-  unordered_map<string, unique_ptr<TTF_Font, FontDeleter>> fonts;
+  unordered_map<string, TTF_Font *> fonts;
 };
 
 #endif
