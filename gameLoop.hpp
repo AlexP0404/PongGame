@@ -3,15 +3,8 @@
 // deals with window/render initializing
 // deals with allocating/deallocating textures
 // runs the game loop and calls the other classes
-#include <memory>
 #include <string>
-#include <unordered_map>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_mixer.h>
-#include <SDL2/SDL_surface.h>
-
-#include "Texture.hpp"
 #include "ai.hpp" //has paddle included already (I know I could include both because of header guards but whatevs)
 #include "dot.hpp"
 #include "engine.hpp"
@@ -19,8 +12,6 @@
 #include "timer.hpp"
 
 using std::string;
-using std::unique_ptr;
-using std::unordered_map;
 // then add networking (UDP?) to make it online multiplayer
 // Move rendering/non-gameloop-mechanics to "Render" class
 
@@ -39,11 +30,9 @@ public:
   ~GameLoop();
 
   bool init();
-  bool loadMedia();
   void loop();
 
 private:
-  /* void renderTextures(); */
   bool collision();
   bool score();
   void setStartText();
@@ -52,27 +41,11 @@ private:
   void setMode();
   void setSpeedSelectText();
   void setSpeed(int dir = 0);
-  /* void drawNet(); */
-  /* void drawDot(); */
-  /* void drawPaddles(); */
   void handleInputs();
   void countDown();
 
 private:
   Engine engine;
-  /* SDL_Window *gameWindow; */
-  /* SDL_Renderer *gameRenderer; */
-  /* SDL_Surface *gameIcon; */
-  /* TTF_Font *mainFont; */
-  /* TTF_Font *escFont; */
-  /* SDL_Color textColor; */
-  /* SDL_Rect p1Rect; */
-  /* SDL_Rect p2Rect; */
-  /* SDL_Rect dotRect; */
-  /* Mix_Chunk *bounce; */
-
-  /* unordered_map<string, unique_ptr<Texture>> */
-  /*     textures; // map all textures on hash table */
 
   Dot dot;
   Scoreboard sb;

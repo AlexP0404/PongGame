@@ -1,14 +1,8 @@
 #include "gameLoop.hpp"
-#include "dot.hpp"
+
 #include <stdexcept>
 
 GameLoop::GameLoop() {
-  /* gameWindow = nullptr; */
-  /* gameRenderer = nullptr; */
-  /* mainFont = nullptr; */
-  /* escFont = nullptr; */
-  /* bounce = nullptr; */
-  /* textColor = {0xFF, 0xFF, 0xFF, 0xFF}; */
   bounceOffPaddle = false;
   p1Scored = false;
   p1Wins = false;
@@ -16,25 +10,7 @@ GameLoop::GameLoop() {
   modeSelection = 1;
 }
 
-GameLoop::~GameLoop() {
-  /* TTF_CloseFont(mainFont); */
-  /* TTF_CloseFont(escFont); */
-  /* mainFont = nullptr; */
-  /* escFont = nullptr; */
-  /**/
-  /* Mix_FreeChunk(bounce); */
-  /* bounce = nullptr; */
-  /**/
-  /* SDL_DestroyRenderer(gameRenderer); */
-  /* SDL_DestroyWindow(gameWindow); */
-  /* gameWindow = nullptr; */
-  /* gameRenderer = nullptr; */
-  /**/
-  /* Mix_Quit(); */
-  /* TTF_Quit(); */
-  /* IMG_Quit(); */
-  /* SDL_Quit(); */
-}
+GameLoop::~GameLoop() = default;
 
 bool GameLoop::init() {
 
@@ -48,6 +24,7 @@ bool GameLoop::init() {
   dot.setSize(DOT_RADIUS, DOT_RADIUS);
 
   engine.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+  engine.setPaddleSize(PADDLE_WIDTH, PADDLE_HEIGHT);
 
   if (!engine.init() || !engine.loadMedia()) {
     return false;
@@ -64,81 +41,12 @@ bool GameLoop::init() {
   return true;
 }
 
-/* bool GameLoop::loadMedia() { */
-/*   bool success = true; */
-/**/
-/*   gameIcon = IMG_Load("dot.bmp"); */
-/*   SDL_SetWindowIcon(gameWindow, gameIcon); */
-/**/
-/*   escFont = TTF_OpenFont("lazy.ttf", 15); */
-/*   if (escFont == nullptr) { */
-/*     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
- */
-/*     success = false; */
-/*   } else { */
-/*     textures["escapePrompt"] = unique_ptr<Texture>(new Texture( */
-/*         *gameRenderer, 0, 0, true)); // uses full parameter constructor */
-/*     if (!textures.at("escapePrompt") */
-/*              ->loadFromRenderedText("Press Escape To Quit", textColor, */
-/*                                     escFont)) { */
-/*       printf("Failed to render text texture!\n"); */
-/*       success = false; */
-/*     } else { */
-/**/
-/*       mainFont = TTF_OpenFont("lazy.ttf", 30); */
-/*       mainText = "Press Enter To Start!"; */
-/*       textures["startPrompt"] = unique_ptr<Texture>(new Texture( */
-/*           *gameRenderer, 0, 0, true)); // uses constructor with no parameters
- */
-/*       setStartText(); */
-/**/
-/*       difficultySelectText = "Easy\t[Medium]\tHard"; */
-/*       textures["difficultyPrompt"] = */
-/*           unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true)); */
-/*       setSpeedSelectText(); */
-/**/
-/*       modeSelectText = "[1 - Local Multiplayer]\t2 - Singleplayer"; */
-/*       textures["modeSelectPrompt"] = */
-/*           unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true)); */
-/*       setModeSelectText(); */
-/**/
-/*       textures["scoreBoard"] = */
-/*           unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true)); */
-/**/
-/*       bounce = Mix_LoadWAV("bounce.wav"); */
-/*       if (bounce == nullptr) { */
-/*         printf("Failed to load bounce sound effect! SDL_mixer Error: %s\n",
- */
-/*                Mix_GetError()); */
-/*         success = false; */
-/*       } */
-/*     } */
-/*   } */
-/*   return success; */
-/* } */
-/**/
 void GameLoop::setScoreboardText() {
   if (!engine.setTextTexture("scoreBoard", "mainFont", sb.getScoreString())) {
     throw std::runtime_error("Failed to set the scoreboard text!");
   }
   engine.setTextureCoorCentered("scoreBoard", SCREEN_WIDTH / 2, 150);
 }
-/*   try { */
-/*     textures.at("scoreBoard") */
-/*         ->loadFromRenderedText(sb.getScoreString().c_str(), textColor, */
-/*                                mainFont); */
-/*     textures.at("scoreBoard") */
-/*         ->setxCoor((SCREEN_WIDTH - textures.at("scoreBoard")->getWidth()) /
- */
-/*                    2); // center */
-/*     textures.at("scoreBoard") */
-/*         ->setyCoor(150); // more towards the top of the screen */
-/*   } catch (std::exception &e) { */
-/*     textures["scoreBoard"] = */
-/*         unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true)); */
-/*     setScoreboardText(); // this is a potential infinite loop lol */
-/*   } */
-/* } */
 
 void GameLoop::setStartText() { // sets the large MAIN  text to the current
   if (!engine.setTextTexture("mainTextTexture", "mainFont", mainText)) {
@@ -147,25 +55,6 @@ void GameLoop::setStartText() { // sets the large MAIN  text to the current
   engine.setTextureCoorCentered("mainTextTexture", SCREEN_WIDTH / 2,
                                 SCREEN_HEIGHT / 2);
 }
-/*                                 // mainText string and adds the texture to
- * the */
-/*                                 // list of active textures */
-/*   try { */
-/*     textures.at("startPrompt") */
-/*         ->loadFromRenderedText(mainText.c_str(), textColor, mainFont); */
-/*     textures.at("startPrompt") */
-/*         ->setxCoor((SCREEN_WIDTH - textures.at("startPrompt")->getWidth()) /
- * 2); */
-/*     textures.at("startPrompt") */
-/*         ->setyCoor((SCREEN_HEIGHT - textures.at("startPrompt")->getHeight())
- * / */
-/*                    2); */
-/*   } catch (std::exception &e) { */
-/*     textures["startPrompt"] = */
-/*         unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true)); */
-/*     setStartText(); // this is a potential infinite loop lol */
-/*   } */
-/* } */
 
 void GameLoop::setModeSelectText() {
   if (!engine.setTextTexture("modeSelectPrompt", "escFont", modeSelectText)) {
@@ -174,24 +63,6 @@ void GameLoop::setModeSelectText() {
   engine.setTextureCoorCentered("modeSelectPrompt", SCREEN_WIDTH / 2,
                                 SCREEN_HEIGHT / 2 + 150);
 }
-/*   try { */
-/*     textures.at("modeSelectPrompt") */
-/*         ->loadFromRenderedText(modeSelectText.c_str(), textColor, escFont);
- */
-/*     textures.at("modeSelectPrompt") */
-/*         ->setxCoor( */
-/*             (SCREEN_WIDTH - textures.at("modeSelectPrompt")->getWidth()) /
- * 2); */
-/*     textures.at("modeSelectPrompt") */
-/*         ->setyCoor(textures.at("difficultyPrompt")->getyCoor() + */
-/*                    textures.at("difficultyPrompt")->getHeight() + 5); */
-/*   } catch (std::exception &e) { */
-/*     setSpeedSelectText(); // make sure this is initialized beforehand */
-/*     textures["modeSelectPrompt"] = */
-/*         unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true)); */
-/*     setModeSelectText(); // this is a potential infinite loop lol */
-/*   } */
-/* } */
 
 void GameLoop::setMode() {
   switch (modeSelection) {
@@ -223,27 +94,6 @@ void GameLoop::setSpeedSelectText() {
   engine.setTextureCoorCentered("difficultyPrompt", SCREEN_WIDTH / 2,
                                 SCREEN_HEIGHT / 2 + 100);
 }
-/*   try { */
-/*     textures.at("difficultyPrompt") */
-/*         ->loadFromRenderedText(difficultySelectText.c_str(), textColor, */
-/*                                escFont); */
-/*     textures.at("difficultyPrompt") */
-/*         ->setxCoor( */
-/*             (SCREEN_WIDTH - textures.at("difficultyPrompt")->getWidth()) / */
-/*             2); // middle of screen */
-/*     textures.at("difficultyPrompt") */
-/*         ->setyCoor(textures.at("startPrompt")->getyCoor() + */
-/*                    textures.at("startPrompt")->getHeight() + */
-/*                    5); // put right below start prompt */
-/*   } catch (std::exception &e) { */
-/*     setStartText(); // make sure start text is initialized so it can use its
- */
-/*                     // measurements */
-/*     textures["difficultyPrompt"] = */
-/*         unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true)); */
-/*     setSpeedSelectText(); */
-/*   } */
-/* } */
 
 void GameLoop::setSpeed(int dir) {
   static int difficulty = 1; // difficulty can be 0,1,2 (easy,medium,hard)
@@ -376,14 +226,10 @@ void GameLoop::handleInputs() {
     }
 
     if (keyStates[SDL_SCANCODE_RETURN]) { // enter key to start
-      /* textures.erase("modeSelectPrompt"); */
-      /* textures.erase("difficultyPrompt"); // remove difficultyPrompt before
-       */
       engine.eraseTextures(
           {"modeSelectPrompt", "difficultyPrompt"}); // countdown starts
       countDown();
       engine.eraseTexture("mainTextTexture");
-      /* textures.erase("startPrompt"); */
       start = true;
       if (singlePlayer) {
         ai1.setPaddle(&p2);
@@ -430,10 +276,8 @@ void GameLoop::handleInputs() {
     }
     if (keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc) {
       lastPressedEsc = false;
-      /* textures.erase("difficultyPrompt"); */
       engine.eraseTexture("difficultyPrompt");
       countDown();
-      /* textures.erase("startPrompt"); // remove the escape text */
       engine.eraseTexture("mainTextTexture");
     }
   }
@@ -454,10 +298,8 @@ void GameLoop::loop() {
     handleInputs();
 
     if (gameOver) {
-      /* SDL_RenderClear(gameRenderer); */
       engine.clearScreen();
       start = false;
-      /* textures.erase("scoreBoard"); */
       mainText = "Player" + (p1Wins ? string(" 1 ") : string(" 2 ")) +
                  "Wins!!! Press Enter To Start Again!";
       setStartText();
@@ -472,7 +314,6 @@ void GameLoop::loop() {
                          // and paddles and checks for a collision
         dot.bounce(bounceOffPaddle);
         engine.playBounce();
-        /* Mix_PlayChannel(-1, bounce, 0); */
         if (!bounceOffPaddle) {
           ai1.setDotBounceX(dot.getDirectionX(), dot.getPosX(),
                             dot.getPosY() <
@@ -481,8 +322,6 @@ void GameLoop::loop() {
           ai2.setDotBounceX(dot.getDirectionX(), dot.getPosX(),
                             dot.getPosY() < SCREEN_HEIGHT / 2);
         }
-        // std::cout << "COLLISION: " << ((bounceOffPaddle) ? "PADDLE\n" :
-        // "BORDER\n");
       }
       if (score()) { // this needs to compare the position of the dot and the
                      // paddles and check if it scored. if it did score, figure
@@ -501,10 +340,10 @@ void GameLoop::loop() {
         dot.set();
       }
       engine.drawNet();
-      engine.drawPaddles(p1, p2);
+      engine.drawPaddles(p1.getPosX(), p1.getPosY(), p2.getPosX(),
+                         p2.getPosY());
       engine.drawDot(dot.getPosX(), dot.getPosY(), DOT_RADIUS);
     }
-    /* SDL_RenderPresent(gameRenderer); */
     engine.renderScreen();
   }
 }

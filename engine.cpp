@@ -15,7 +15,7 @@ Engine::Engine() {
 }
 
 Engine::Engine(const int screenWidth, const int screenHeight)
-    : m_ScreenHeight(screenHeight), m_ScreenWidth(screenWidth) {
+    : m_ScreenWidth(screenWidth), m_ScreenHeight(screenHeight) {
   gameWindow = nullptr;
   gameRenderer = nullptr;
   bounce = nullptr;
@@ -195,10 +195,14 @@ void Engine::drawNet() {
   }
 }
 
-void Engine::drawPaddles(const Paddle &p1, const Paddle &p2) {
-  p1Rect = {p1.getPosX(), p1.getPosY(), p1.getSizeX(), p1.getSizeY()};
+void Engine::setPaddleSize(int width, int height) {
+  m_PaddleWidth = width, m_PaddleHeight = height;
+}
+
+void Engine::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
+  p1Rect = {p1X, p1Y, m_PaddleWidth, m_PaddleHeight};
   // initialize the first paddle in the middle left of the screen
-  p2Rect = {p2.getPosX(), p2.getPosY(), p2.getSizeX(), p2.getSizeY()};
+  p2Rect = {p2X, p2Y, m_PaddleWidth, m_PaddleHeight};
   SDL_RenderFillRect(gameRenderer, &p1Rect);
   SDL_RenderFillRect(gameRenderer, &p2Rect);
 }

@@ -13,7 +13,6 @@
 #include <SDL2/SDL_surface.h>
 
 #include "Texture.hpp"
-#include "paddle.hpp"
 
 using std::string;
 using std::unique_ptr;
@@ -53,15 +52,17 @@ public:
   void clearScreen();
   void eraseTextures(const vector<string> &&texturesToErase);
   void eraseTexture(const string &&textureName);
-
+  void setPaddleSize(int width, int height);
   void drawNet();
   void drawDot(int dotX, int dotY, int dotRadius);
-  void drawPaddles(const Paddle &p1, const Paddle &p2);
+  void drawPaddles(int p1X, int p1Y, int p2X, int p2Y);
   void playBounce();
 
 private:
   int m_ScreenWidth;
   int m_ScreenHeight;
+  int m_PaddleWidth;
+  int m_PaddleHeight;
 
   SDL_Window *gameWindow;
   SDL_Renderer *gameRenderer;
