@@ -1,6 +1,7 @@
 #include "engine.hpp"
 #include <SDL2/SDL_render.h>
 #include <SDL2/SDL_ttf.h>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 
@@ -116,6 +117,8 @@ bool Engine::loadMedia() {
 
   return true;
 }
+// need to call setTextTexture then call setTextureCoor in order for the coors
+// to save
 
 bool Engine::setTextureCoor(const string &&textureName, int x, int y) {
   if (textures.find(textureName) == textures.end()) {
@@ -126,8 +129,14 @@ bool Engine::setTextureCoor(const string &&textureName, int x, int y) {
   return true;
 }
 
+bool Engine::setTextureCoorCentered(const string &&textureName, int x, int y) {
+  return setTextureCoor(std::move(textureName),
+                        x - textures.at(textureName)->getWidth() / 2,
+                        y - textures.at(textureName)->getHeight() / 2);
+}
+
 bool Engine::setTextTexture(const string &&textureName, const string &&fontName,
-                            const string &&text) {
+                            const string &text) {
   if (textures.find(textureName) == textures.end()) {
     textures[textureName] =
         unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
@@ -144,6 +153,18 @@ bool Engine::setTextTexture(const string &&textureName, const string &&fontName,
       ->loadFromRenderedText(text.c_str(), textColor, fonts.at(fontName).get());
 }
 
+bool Engine::createTextureFromFile(const string &&textureName,
+                                   const std::filesystem::path &&fileName) {
+  if (std::filesystem::is_empty(fileName)) {
+    std::cout << "ERROR:: Texture does not exist!\n";
+    return false;
+  }
+  textures[textureName] =
+      unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, false));
+
+  return textures.at(textureName)->loadFromFile(fileName.string());
+}
+
 void Engine::renderTextures() {
   SDL_SetRenderDrawColor(gameRenderer, 0, 0, 0, 0xFF);
   SDL_RenderClear(gameRenderer);
@@ -155,8 +176,88 @@ void Engine::renderTextures() {
 
 void Engine::renderScreen() { SDL_RenderPresent(gameRenderer); }
 
+void Engine::clearScreen() { SDL_RenderClear(gameRenderer); }
+
 void Engine::eraseTextures(const vector<string> &&texturesToErase) {
   for (auto &textureName : texturesToErase) {
     textures.erase(textureName);
   }
 }
+
+void Engine::eraseTexture(const string &&textureName) {
+  textures.erase(textureName);
+}
+
+void Engine::drawNet() {
+  SDL_SetRenderDrawColor(gameRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+  for (int i = 0; i < m_ScreenHeight; i += 4) {
+    SDL_RenderDrawPoint(gameRenderer, m_ScreenWidth / 2, i);
+  }
+}
+
+void Engine::drawPaddles(const Paddle &p1, const Paddle &p2) {
+  p1Rect = {p1.getPosX(), p1.getPosY(), p1.getSizeX(), p1.getSizeY()};
+  // initialize the first paddle in the middle left of the screen
+  p2Rect = {p2.getPosX(), p2.getPosY(), p2.getSizeX(), p2.getSizeY()};
+  SDL_RenderFillRect(gameRenderer, &p1Rect);
+  SDL_RenderFillRect(gameRenderer, &p2Rect);
+}
+
+void Engine::drawDot(int dotX, int dotY, int dotRadius) {
+  // https://www.ferzkopp.net/Software/SDL2_gfx/Docs/html/_s_d_l2__gfx_primitives_8c_source.html#l01457
+  // used SDL_gfx filledCircle but didn't want to include the whole library just
+  // for the circle so I edited it to use it here
+  short cx = 0;
+  short cy = dotRadius;
+  short ocx = (short)0xffff;
+  short ocy = (short)0xffff;
+  short df = 1 - dotRadius;
+  short d_e = 3;
+  short d_se = -2 * dotRadius + 5;
+  short xpcx, xmcx, xpcy, xmcy;
+  short ypcy, ymcy, ypcx, ymcx;
+
+  do {
+    xpcx = dotX + cx;
+    xmcx = dotX - cx;
+    xpcy = dotX + cy;
+    xmcy = dotX - cy;
+    if (ocy != cy) {
+      if (cy > 0) {
+        ypcy = dotY + cy;
+        ymcy = dotY - cy;
+        SDL_RenderDrawLine(gameRenderer, xmcx, ypcy, xpcx, ypcy);
+        SDL_RenderDrawLine(gameRenderer, xmcx, ymcy, xpcx, ymcy);
+      } else {
+        SDL_RenderDrawLine(gameRenderer, xmcx, dotY, xpcx, dotY);
+      }
+      ocy = cy;
+    }
+    if (ocx != cx) {
+      if (cx != cy) {
+        if (cx > 0) {
+          ypcx = dotY + cx;
+          ymcx = dotY - cx;
+          SDL_RenderDrawLine(gameRenderer, xmcy, ymcx, xpcy, ymcx);
+          SDL_RenderDrawLine(gameRenderer, xmcy, ypcx, xpcy, ypcx);
+        } else {
+          SDL_RenderDrawLine(gameRenderer, xmcy, dotY, xpcy, dotY);
+        }
+      }
+      ocx = cx;
+    }
+    if (df < 0) {
+      df += d_e;
+      d_e += 2;
+      d_se += 2;
+    } else {
+      df += d_se;
+      d_e += 2;
+      d_se += 4;
+      cy--;
+    }
+    cx++;
+  } while (cx <= cy);
+}
+
+void Engine::playBounce() { Mix_PlayChannel(-1, bounce, 0); }

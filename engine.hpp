@@ -2,6 +2,7 @@
 #define RENDER_CPP
 
 #include <SDL2/SDL_ttf.h>
+#include <filesystem>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -12,6 +13,7 @@
 #include <SDL2/SDL_surface.h>
 
 #include "Texture.hpp"
+#include "paddle.hpp"
 
 using std::string;
 using std::unique_ptr;
@@ -38,16 +40,28 @@ public:
 
   bool init();
   bool loadMedia();
+  bool setTextureCoorCentered(const string &&textureName, int x, int y);
   bool setTextureCoor(const string &&textureName, int x, int y);
+
   bool setTextTexture(const string &&textureName, const string &&fontName,
-                      const string &&text);
+                      const string &text);
+
+  bool createTextureFromFile(const string &&textureName,
+                             const std::filesystem::path &&fileName);
   void renderTextures();
   void renderScreen();
+  void clearScreen();
   void eraseTextures(const vector<string> &&texturesToErase);
+  void eraseTexture(const string &&textureName);
+
+  void drawNet();
+  void drawDot(int dotX, int dotY, int dotRadius);
+  void drawPaddles(const Paddle &p1, const Paddle &p2);
+  void playBounce();
 
 private:
-  int m_ScreenWidth = 1280;
-  int m_ScreenHeight = 960;
+  int m_ScreenWidth;
+  int m_ScreenHeight;
 
   SDL_Window *gameWindow;
   SDL_Renderer *gameRenderer;

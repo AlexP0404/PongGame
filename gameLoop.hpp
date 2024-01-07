@@ -43,7 +43,7 @@ public:
   void loop();
 
 private:
-  void renderTextures();
+  /* void renderTextures(); */
   bool collision();
   bool score();
   void setStartText();
@@ -52,26 +52,27 @@ private:
   void setMode();
   void setSpeedSelectText();
   void setSpeed(int dir = 0);
-  void drawNet();
-  void drawDot();
-  void drawPaddles();
+  /* void drawNet(); */
+  /* void drawDot(); */
+  /* void drawPaddles(); */
   void handleInputs();
   void countDown();
 
 private:
   Engine engine;
-  SDL_Window *gameWindow;
-  SDL_Renderer *gameRenderer;
-  SDL_Surface *gameIcon;
-  TTF_Font *mainFont;
-  TTF_Font *escFont;
-  SDL_Color textColor;
-  SDL_Rect p1Rect;
-  SDL_Rect p2Rect;
-  SDL_Rect dotRect;
+  /* SDL_Window *gameWindow; */
+  /* SDL_Renderer *gameRenderer; */
+  /* SDL_Surface *gameIcon; */
+  /* TTF_Font *mainFont; */
+  /* TTF_Font *escFont; */
+  /* SDL_Color textColor; */
+  /* SDL_Rect p1Rect; */
+  /* SDL_Rect p2Rect; */
+  /* SDL_Rect dotRect; */
+  /* Mix_Chunk *bounce; */
 
-  unordered_map<string, unique_ptr<Texture>>
-      textures; // map all textures on hash table
+  /* unordered_map<string, unique_ptr<Texture>> */
+  /*     textures; // map all textures on hash table */
 
   Dot dot;
   Scoreboard sb;
@@ -92,7 +93,6 @@ private:
   bool gameOver;
   bool lastPressedEsc;
   bool singlePlayer;
-  Mix_Chunk *bounce;
   Timer m_GameTimer;
   Timer m_CollisionPaddleTimer;
   Timer m_CollisionBorderTimer;

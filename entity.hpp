@@ -28,12 +28,12 @@ public:
     mSizeY = sizeY;
   }
 
-  int getPosX() { return mPosX; }
-  int getPosY() { return mPosY; }
-  int getSizeX() { return mSizeX; }
-  int getSizeY() { return mSizeY; }
-  int getScreenW() { return mScreenW; }
-  int getScreenH() { return mScreenH; }
+  const int getPosX() const { return mPosX; }
+  const int getPosY() const { return mPosY; }
+  const int getSizeX() const { return mSizeX; }
+  const int getSizeY() const { return mSizeY; }
+  const int getScreenW() const { return mScreenW; }
+  const int getScreenH() const { return mScreenH; }
   inline bool genRandBool() {
     return mRandDev() % 10 > 5;
   } // 50/50 to be true or false
