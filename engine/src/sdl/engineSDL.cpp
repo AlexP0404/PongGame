@@ -1,7 +1,7 @@
-#include "engine.hpp"
+#include "engineSDL.hpp"
 #include <iostream>
 
-Engine::Engine() {
+EngineSDL::EngineSDL() {
   gameWindow = nullptr;
   gameRenderer = nullptr;
   bounce = nullptr;
@@ -10,15 +10,7 @@ Engine::Engine() {
   m_ScreenHeight = 960;
 }
 
-Engine::Engine(const int screenWidth, const int screenHeight)
-    : m_ScreenWidth(screenWidth), m_ScreenHeight(screenHeight) {
-  gameWindow = nullptr;
-  gameRenderer = nullptr;
-  bounce = nullptr;
-  textColor = {0xFF, 0xFF, 0xFF, 0xFF};
-}
-
-Engine::~Engine() {
+EngineSDL::~EngineSDL() {
   for (auto &[name, font] : fonts) {
     TTF_CloseFont(font);
     font = nullptr;
@@ -38,7 +30,7 @@ Engine::~Engine() {
   SDL_Quit();
 }
 
-bool Engine::init() {
+bool EngineSDL::init() {
   bool success = true;
 
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
@@ -87,7 +79,7 @@ bool Engine::init() {
   return success;
 }
 
-bool Engine::loadMedia() {
+bool EngineSDL::loadMedia() {
   gameIcon = IMG_Load("dot.bmp");
   SDL_SetWindowIcon(gameWindow, gameIcon);
 
@@ -119,7 +111,7 @@ bool Engine::loadMedia() {
 // need to call setTextTexture then call setTextureCoor in order for the coors
 // to save
 
-bool Engine::setTextureCoor(const string &&textureName, int x, int y) {
+bool EngineSDL::setTextureCoor(const string &&textureName, int x, int y) {
   if (textures.find(textureName) == textures.end()) {
     std::cout << "Failed to set texture coor: " << textureName << "\n";
     return false;
@@ -128,14 +120,15 @@ bool Engine::setTextureCoor(const string &&textureName, int x, int y) {
   return true;
 }
 
-bool Engine::setTextureCoorCentered(const string &&textureName, int x, int y) {
+bool EngineSDL::setTextureCoorCentered(const string &&textureName, int x,
+                                       int y) {
   return setTextureCoor(std::move(textureName),
                         x - textures.at(textureName)->getWidth() / 2,
                         y - textures.at(textureName)->getHeight() / 2);
 }
 
-bool Engine::setTextTexture(const string &&textureName, const string &&fontName,
-                            const string &text) {
+bool EngineSDL::setTextTexture(const string &&textureName,
+                               const string &&fontName, const string &text) {
   if (textures.find(textureName) == textures.end()) {
     textures[textureName] =
         unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
@@ -151,8 +144,8 @@ bool Engine::setTextTexture(const string &&textureName, const string &&fontName,
       ->loadFromRenderedText(text.c_str(), textColor, fonts.at(fontName));
 }
 
-bool Engine::createTextureFromFile(const string &&textureName,
-                                   const std::filesystem::path &&fileName) {
+bool EngineSDL::createTextureFromFile(const string &&textureName,
+                                      const std::filesystem::path &&fileName) {
   if (std::filesystem::is_empty(fileName)) {
     std::cout << "ERROR:: Texture does not exist!\n";
     return false;
@@ -163,7 +156,7 @@ bool Engine::createTextureFromFile(const string &&textureName,
   return textures.at(textureName)->loadFromFile(fileName.string());
 }
 
-void Engine::renderTextures() {
+void EngineSDL::renderTextures() {
   SDL_SetRenderDrawColor(gameRenderer, 0, 0, 0, 0xFF);
   SDL_RenderClear(gameRenderer);
 
@@ -172,32 +165,28 @@ void Engine::renderTextures() {
   }
 }
 
-void Engine::renderScreen() { SDL_RenderPresent(gameRenderer); }
+void EngineSDL::renderScreen() { SDL_RenderPresent(gameRenderer); }
 
-void Engine::clearScreen() { SDL_RenderClear(gameRenderer); }
+void EngineSDL::clearScreen() { SDL_RenderClear(gameRenderer); }
 
-void Engine::eraseTextures(const vector<string> &&texturesToErase) {
+void EngineSDL::eraseTextures(const vector<string> &&texturesToErase) {
   for (auto &textureName : texturesToErase) {
     textures.erase(textureName);
   }
 }
 
-void Engine::eraseTexture(const string &&textureName) {
+void EngineSDL::eraseTexture(const string &&textureName) {
   textures.erase(textureName);
 }
 
-void Engine::drawNet() {
+void EngineSDL::drawNet() {
   SDL_SetRenderDrawColor(gameRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
   for (int i = 0; i < m_ScreenHeight; i += 4) {
     SDL_RenderDrawPoint(gameRenderer, m_ScreenWidth / 2, i);
   }
 }
 
-void Engine::setPaddleSize(int width, int height) {
-  m_PaddleWidth = width, m_PaddleHeight = height;
-}
-
-void Engine::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
+void EngineSDL::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
   p1Rect = {p1X, p1Y, m_PaddleWidth, m_PaddleHeight};
   // initialize the first paddle in the middle left of the screen
   p2Rect = {p2X, p2Y, m_PaddleWidth, m_PaddleHeight};
@@ -205,7 +194,7 @@ void Engine::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
   SDL_RenderFillRect(gameRenderer, &p2Rect);
 }
 
-void Engine::drawDot(int dotX, int dotY, int dotRadius) {
+void EngineSDL::drawDot(int dotX, int dotY, int dotRadius) {
   // https://www.ferzkopp.net/Software/SDL2_gfx/Docs/html/_s_d_l2__gfx_primitives_8c_source.html#l01457
   // used SDL_gfx filledCircle but didn't want to include the whole library just
   // for the circle so I edited it to use it here
@@ -262,4 +251,4 @@ void Engine::drawDot(int dotX, int dotY, int dotRadius) {
   } while (cx <= cy);
 }
 
-void Engine::playBounce() { Mix_PlayChannel(-1, bounce, 0); }
+void EngineSDL::playBounce() { Mix_PlayChannel(-1, bounce, 0); }

@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <string>
 
+// this is too specifc to each backend to interface properly
+
 class Texture {
 public:
   Texture();

@@ -29,6 +29,19 @@ if(ENGINE_USE_VLK)
       CACHE BOOL "" FORCE)
   find_package(glfw3 REQUIRED)
   find_package(glm REQUIRED)
+
+  file(
+    GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
+    "${PROJECT_SOURCE_DIR}/src/engine.hpp"
+    "${PROJECT_SOURCE_DIR}/src/vlk/*.hpp" "${PROJECT_SOURCE_DIR}/src/vlk/*.cpp")
+
+  add_library(engine STATIC ${ENGINE_SRC})
+
+  target_link_libraries(engine PUBLIC Vulkan::Vulkan Vulkan::Headers)
+  target_link_libraries(engine PUBLIC glfw)
+  target_link_libraries(engine PUBLIC glm)
+
+  target_compile_definitions(engine PUBLIC ENGINE_USE_VLK)
 else()
   find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
   find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
@@ -37,8 +50,10 @@ else()
   find_package(SDL2_image REQUIRED)
   include_directories(${SDL2_INCLUDE_DIRS})
 
-  file(GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
-       "${PROJECT_SOURCE_DIR}/src/*.hpp" "${PROJECT_SOURCE_DIR}/src/*.cpp")
+  file(
+    GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
+    "${PROJECT_SOURCE_DIR}/src/engine.hpp"
+    "${PROJECT_SOURCE_DIR}/src/sdl/*.hpp" "${PROJECT_SOURCE_DIR}/src/sdl/*.cpp")
 
   add_library(engine STATIC ${ENGINE_SRC})
 
@@ -47,11 +62,11 @@ else()
   endif()
   target_link_libraries(engine PUBLIC SDL2::SDL2)
   target_link_libraries(engine PUBLIC SDL2_ttf::SDL2_ttf) # ttf
-  target_link_libraries(engine PUBLIC SDL2_mixer::SDL2_mixer) # ttf
-  target_link_libraries(engine PUBLIC SDL2_image::SDL2_image) # ttf
-  # target_link_libraries(engine PUBLIC ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY})
-  # target_link_libraries(engine PUBLIC ${SDL2_LIBRARY} ${SDL2MIXER_LIBRARY})
+  target_link_libraries(engine PUBLIC SDL2_mixer::SDL2_mixer)
+  target_link_libraries(engine PUBLIC SDL2_image::SDL2_image)
 
-  target_include_directories(engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+  target_include_directories(
+    engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/src/sdl")
 
 endif()

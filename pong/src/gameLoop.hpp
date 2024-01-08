@@ -5,9 +5,16 @@
 // runs the game loop and calls the other classes
 #include <string>
 
+#ifndef ENGINE_USE_VLK
+#include "engineSDL.hpp"
+typedef EngineSDL engine;
+#else
+#include "engineVLK.hpp"
+typtypedef EngineVLK engine;
+#endif
+
 #include "ai.hpp" //has paddle included already (I know I could include both because of header guards but whatevs)
 #include "dot.hpp"
-#include "engine.hpp"
 #include "scoreboard.hpp"
 #include "timer.hpp"
 
@@ -45,7 +52,7 @@ private:
   void countDown();
 
 private:
-  Engine engine;
+  engine gameEngine;
 
   Dot dot;
   Scoreboard sb;

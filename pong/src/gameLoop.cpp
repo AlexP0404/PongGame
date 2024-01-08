@@ -23,10 +23,10 @@ bool GameLoop::init() {
   dot.setScreen(SCREEN_WIDTH, SCREEN_HEIGHT);
   dot.setSize(DOT_RADIUS, DOT_RADIUS);
 
-  engine.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-  engine.setPaddleSize(PADDLE_WIDTH, PADDLE_HEIGHT);
+  gameEngine.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+  gameEngine.setPaddleSize(PADDLE_WIDTH, PADDLE_HEIGHT);
 
-  if (!engine.init() || !engine.loadMedia()) {
+  if (!gameEngine.init() || !gameEngine.loadMedia()) {
     return false;
   }
 
@@ -42,26 +42,28 @@ bool GameLoop::init() {
 }
 
 void GameLoop::setScoreboardText() {
-  if (!engine.setTextTexture("scoreBoard", "mainFont", sb.getScoreString())) {
+  if (!gameEngine.setTextTexture("scoreBoard", "mainFont",
+                                 sb.getScoreString())) {
     throw std::runtime_error("Failed to set the scoreboard text!");
   }
-  engine.setTextureCoorCentered("scoreBoard", SCREEN_WIDTH / 2, 150);
+  gameEngine.setTextureCoorCentered("scoreBoard", SCREEN_WIDTH / 2, 150);
 }
 
 void GameLoop::setStartText() { // sets the large MAIN  text to the current
-  if (!engine.setTextTexture("mainTextTexture", "mainFont", mainText)) {
+  if (!gameEngine.setTextTexture("mainTextTexture", "mainFont", mainText)) {
     throw std::runtime_error("Failed to set the main text!");
   }
-  engine.setTextureCoorCentered("mainTextTexture", SCREEN_WIDTH / 2,
-                                SCREEN_HEIGHT / 2);
+  gameEngine.setTextureCoorCentered("mainTextTexture", SCREEN_WIDTH / 2,
+                                    SCREEN_HEIGHT / 2);
 }
 
 void GameLoop::setModeSelectText() {
-  if (!engine.setTextTexture("modeSelectPrompt", "escFont", modeSelectText)) {
+  if (!gameEngine.setTextTexture("modeSelectPrompt", "escFont",
+                                 modeSelectText)) {
     throw std::runtime_error("Failed to set the mode select text!");
   }
-  engine.setTextureCoorCentered("modeSelectPrompt", SCREEN_WIDTH / 2,
-                                SCREEN_HEIGHT / 2 + 150);
+  gameEngine.setTextureCoorCentered("modeSelectPrompt", SCREEN_WIDTH / 2,
+                                    SCREEN_HEIGHT / 2 + 150);
 }
 
 void GameLoop::setMode() {
@@ -87,12 +89,12 @@ void GameLoop::setMode() {
 }
 
 void GameLoop::setSpeedSelectText() {
-  if (!engine.setTextTexture("difficultyPrompt", "escFont",
-                             difficultySelectText)) {
+  if (!gameEngine.setTextTexture("difficultyPrompt", "escFont",
+                                 difficultySelectText)) {
     throw std::runtime_error("Failed to set the difficulty select text!");
   }
-  engine.setTextureCoorCentered("difficultyPrompt", SCREEN_WIDTH / 2,
-                                SCREEN_HEIGHT / 2 + 100);
+  gameEngine.setTextureCoorCentered("difficultyPrompt", SCREEN_WIDTH / 2,
+                                    SCREEN_HEIGHT / 2 + 100);
 }
 
 void GameLoop::setSpeed(int dir) {
@@ -183,8 +185,8 @@ void GameLoop::countDown() {
     while (countDownTimer.ElapsedMillis() < 1000.0f)
       ;
     countDownTimer.Reset();
-    engine.renderTextures();
-    engine.renderScreen();
+    gameEngine.renderTextures();
+    gameEngine.renderScreen();
   }
 }
 
@@ -226,10 +228,10 @@ void GameLoop::handleInputs() {
     }
 
     if (keyStates[SDL_SCANCODE_RETURN]) { // enter key to start
-      engine.eraseTextures(
+      gameEngine.eraseTextures(
           {"modeSelectPrompt", "difficultyPrompt"}); // countdown starts
       countDown();
-      engine.eraseTexture("mainTextTexture");
+      gameEngine.eraseTexture("mainTextTexture");
       start = true;
       if (singlePlayer) {
         ai1.setPaddle(&p2);
@@ -276,9 +278,9 @@ void GameLoop::handleInputs() {
     }
     if (keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc) {
       lastPressedEsc = false;
-      engine.eraseTexture("difficultyPrompt");
+      gameEngine.eraseTexture("difficultyPrompt");
       countDown();
-      engine.eraseTexture("mainTextTexture");
+      gameEngine.eraseTexture("mainTextTexture");
     }
   }
 }
@@ -298,7 +300,7 @@ void GameLoop::loop() {
     handleInputs();
 
     if (gameOver) {
-      engine.clearScreen();
+      gameEngine.clearScreen();
       start = false;
       mainText = "Player" + (p1Wins ? string(" 1 ") : string(" 2 ")) +
                  "Wins!!! Press Enter To Start Again!";
@@ -307,13 +309,13 @@ void GameLoop::loop() {
       setMode();
     }
 
-    engine.renderTextures();
+    gameEngine.renderTextures();
     if (start && !lastPressedEsc) {
       dot.move();
       if (collision()) { // this compares the positions of the dot and the walls
                          // and paddles and checks for a collision
         dot.bounce(bounceOffPaddle);
-        engine.playBounce();
+        gameEngine.playBounce();
         if (!bounceOffPaddle) {
           ai1.setDotBounceX(dot.getDirectionX(), dot.getPosX(),
                             dot.getPosY() <
@@ -339,11 +341,11 @@ void GameLoop::loop() {
         }
         dot.set();
       }
-      engine.drawNet();
-      engine.drawPaddles(p1.getPosX(), p1.getPosY(), p2.getPosX(),
-                         p2.getPosY());
-      engine.drawDot(dot.getPosX(), dot.getPosY(), DOT_RADIUS);
+      gameEngine.drawNet();
+      gameEngine.drawPaddles(p1.getPosX(), p1.getPosY(), p2.getPosX(),
+                             p2.getPosY());
+      gameEngine.drawDot(dot.getPosX(), dot.getPosY(), DOT_RADIUS);
     }
-    engine.renderScreen();
+    gameEngine.renderScreen();
   }
 }
