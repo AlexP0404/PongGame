@@ -112,6 +112,16 @@ bool EngineSDL::loadMedia() {
 
   return true;
 }
+
+bool EngineSDL::shouldQuit() {
+  SDL_Event e;
+  while (SDL_PollEvent(&e) != 0) {
+    if (e.type == SDL_QUIT) {
+      return true;
+    }
+  }
+  return false;
+}
 // need to call setTextTexture then call setTextureCoor in order for the coors
 // to save
 

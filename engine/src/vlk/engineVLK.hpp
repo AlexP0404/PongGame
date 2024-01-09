@@ -11,6 +11,7 @@ public:
 
   bool init() override;
   bool loadMedia() override;
+  bool shouldQuit() override;
   bool setTextureCoorCentered(const std::string &&textureName, int x,
                               int y) override;
   bool setTextureCoor(const std::string &&textureName, int x, int y) override;

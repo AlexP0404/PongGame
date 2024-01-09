@@ -7,10 +7,10 @@
 
 #ifndef ENGINE_USE_VLK
 #include "engineSDL.hpp"
-typedef EngineSDL engine;
+typedef EngineSDL selectedEngine;
 #else
 #include "engineVLK.hpp"
-typtypedef EngineVLK engine;
+typedef EngineVLK selectedEngine;
 #endif
 
 #include "ai.hpp" //has paddle included already (I know I could include both because of header guards but whatevs)
@@ -19,7 +19,6 @@ typtypedef EngineVLK engine;
 #include "timer.hpp"
 
 // then add networking (UDP?) to make it online multiplayer
-// Move rendering/non-gameloop-mechanics to "Render" class
 
 const int SCREEN_WIDTH = 1280;
 const int SCREEN_HEIGHT = 960;
@@ -51,7 +50,7 @@ private:
   void countDown();
 
 private:
-  engine gameEngine;
+  selectedEngine gameEngine;
 
   Dot dot;
   Scoreboard sb;

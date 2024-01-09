@@ -9,37 +9,31 @@ if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
-set(Vulkan_INCLUDE_DIRS "$ENV{VULKAN_SDK}/Include")
-set(Vulkan_LIBRARIES "$ENV{VULKAN_SDK}/Lib")
-
 if(ENGINE_USE_VLK)
   find_package(Vulkan REQUIRED)
-
-  set(GLFW_BUILD_DOCS
-      OFF
-      CACHE BOOL "" FORCE)
-  set(GLFW_BUILD_TESTS
-      OFF
-      CACHE BOOL "" FORCE)
-  set(GLFW_BUILD_EXAMPLES
-      OFF
-      CACHE BOOL "" FORCE)
-  set(GLFW_VULKAN_STATIC
-      ON
-      CACHE BOOL "" FORCE)
   find_package(glfw3 REQUIRED)
   find_package(glm REQUIRED)
+  find_package(OpenAL REQUIRED)
 
   file(
-    GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
+    GLOB_RECURSE
+    ENGINE_SRC
+    CONFIGURE_DEPENDS
     "${PROJECT_SOURCE_DIR}/src/engine.hpp"
-    "${PROJECT_SOURCE_DIR}/src/vlk/*.hpp" "${PROJECT_SOURCE_DIR}/src/vlk/*.cpp")
+    "${PROJECT_SOURCE_DIR}/src/keyCodes.hpp"
+    "${PROJECT_SOURCE_DIR}/src/vlk/*.hpp"
+    "${PROJECT_SOURCE_DIR}/src/vlk/*.cpp")
 
   add_library(engine STATIC ${ENGINE_SRC})
 
   target_link_libraries(engine PUBLIC Vulkan::Vulkan Vulkan::Headers)
   target_link_libraries(engine PUBLIC glfw)
   target_link_libraries(engine PUBLIC glm)
+  target_link_libraries(engine PUBLIC OpenAL::OpenAL)
+
+  target_include_directories(
+    engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src"
+                  "${CMAKE_CURRENT_SOURCE_DIR}/src/vlk")
 
   target_compile_definitions(engine PUBLIC ENGINE_USE_VLK)
 else()
@@ -51,9 +45,13 @@ else()
   include_directories(${SDL2_INCLUDE_DIRS})
 
   file(
-    GLOB_RECURSE ENGINE_SRC CONFIGURE_DEPENDS
+    GLOB_RECURSE
+    ENGINE_SRC
+    CONFIGURE_DEPENDS
     "${PROJECT_SOURCE_DIR}/src/engine.hpp"
-    "${PROJECT_SOURCE_DIR}/src/sdl/*.hpp" "${PROJECT_SOURCE_DIR}/src/sdl/*.cpp")
+    "${PROJECT_SOURCE_DIR}/src/keyCodes.hpp"
+    "${PROJECT_SOURCE_DIR}/src/sdl/*.hpp"
+    "${PROJECT_SOURCE_DIR}/src/sdl/*.cpp")
 
   add_library(engine STATIC ${ENGINE_SRC})
 

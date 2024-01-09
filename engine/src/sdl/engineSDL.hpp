@@ -10,6 +10,7 @@
 #include <SDL2/SDL_ttf.h>
 
 #include "engine.hpp"
+#include "inputSDL.hpp"
 #include "textureSDL.hpp"
 
 struct FontDeleter {
@@ -27,6 +28,8 @@ public:
 
   bool init() override;
   bool loadMedia() override;
+  bool shouldQuit() override;
+
   bool setTextureCoorCentered(const std::string &&textureName, int x,
                               int y) override;
   bool setTextureCoor(const std::string &&textureName, int x, int y) override;
@@ -46,6 +49,8 @@ public:
   void drawDot(int dotX, int dotY, int dotRadius) override;
   void drawPaddles(int p1X, int p1Y, int p2X, int p2Y) override;
   void playBounce() override;
+
+  inputSDL inputs;
 
 private:
   SDL_Window *gameWindow;

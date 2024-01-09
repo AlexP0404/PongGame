@@ -198,38 +198,34 @@ void GameLoop::handleInputs() {
   if (inputDelayTimer.ElapsedMillis() < 8.0f)
     return;
   inputDelayTimer.Reset();
-  SDL_Event e;
-  while (SDL_PollEvent(&e) != 0) {
-    if (e.type == SDL_QUIT) {
+  gameEngine.inputs.updateKeyStates(); // refresh they keyboard buffer
+  if (!start) {                        // if still at start screen
+    if (gameEngine.inputs.IsKeyDown(KeyCode::Escape)) // escape key to quit
       quit = true;
-    }
-  }
-  const Uint8 *keyStates = SDL_GetKeyboardState(nullptr);
-  if (!start) {                         // if still at start screen
-    if (keyStates[SDL_SCANCODE_ESCAPE]) // escape key to quit
-      quit = true;
-    if (keyStates[SDL_SCANCODE_LEFT] &&
+    if (gameEngine.inputs.IsKeyDown(KeyCode::Left) &&
         selectionDelay.ElapsedMillis() > 200.0f) { // debounce arrows
       selectionDelay.Reset();
       setSpeed(-1); // change speed to slower
     }
-    if (keyStates[SDL_SCANCODE_RIGHT] &&
+    if (gameEngine.inputs.IsKeyDown(KeyCode::Right) &&
         selectionDelay.ElapsedMillis() > 200.0f) {
       selectionDelay.Reset();
       setSpeed(1);
     }
-    if (keyStates[SDL_SCANCODE_1] && selectionDelay.ElapsedMillis() > 200.0f) {
+    if (gameEngine.inputs.IsKeyDown(KeyCode::D1) &&
+        selectionDelay.ElapsedMillis() > 200.0f) {
       selectionDelay.Reset();
       modeSelection = 1;
       setMode();
     }
-    if (keyStates[SDL_SCANCODE_2] && selectionDelay.ElapsedMillis() > 200.0f) {
+    if (gameEngine.inputs.IsKeyDown(KeyCode::D2) &&
+        selectionDelay.ElapsedMillis() > 200.0f) {
       selectionDelay.Reset();
       modeSelection = 2;
       setMode();
     }
 
-    if (keyStates[SDL_SCANCODE_RETURN]) { // enter key to start
+    if (gameEngine.inputs.IsKeyDown(KeyCode::Enter)) { // enter key to start
       gameEngine.eraseTextures(
           {"modeSelectPrompt", "difficultyPrompt"}); // countdown starts
       countDown();
@@ -248,7 +244,7 @@ void GameLoop::handleInputs() {
       dot.set();
     }
   } else { // game started (now this is used for player controls) start = true
-    if (keyStates[SDL_SCANCODE_ESCAPE]) {
+    if (gameEngine.inputs.IsKeyDown(KeyCode::Escape)) {
       if (lastPressedEsc) {
         return;
       }
@@ -260,16 +256,17 @@ void GameLoop::handleInputs() {
     }
     // all the other cases now update lastPressedEsc to true because it
     // wasnt pressed 2x in a row
-    if (keyStates[SDL_SCANCODE_RETURN] && lastPressedEsc)
+    if (gameEngine.inputs.IsKeyDown(KeyCode::Enter) && lastPressedEsc)
       quit = true;
     if (!singlePlayer) {
-      if (keyStates[SDL_SCANCODE_W]) // start of the player controls
+      if (gameEngine.inputs.IsKeyDown(
+              KeyCode::W)) // start of the player controls
         p1.move(true);
-      if (keyStates[SDL_SCANCODE_S])
+      if (gameEngine.inputs.IsKeyDown(KeyCode::S))
         p1.move(false);
-      if (keyStates[SDL_SCANCODE_UP])
+      if (gameEngine.inputs.IsKeyDown(KeyCode::Up))
         p2.move(true);
-      if (keyStates[SDL_SCANCODE_DOWN])
+      if (gameEngine.inputs.IsKeyDown(KeyCode::Down))
         p2.move(false);
     } else { // singleplayer
       int numAImoves = p2.genRandNum(5);
@@ -278,7 +275,7 @@ void GameLoop::handleInputs() {
         ai2.movePaddle();
       }
     }
-    if (keyStates[SDL_SCANCODE_SPACE] && lastPressedEsc) {
+    if (gameEngine.inputs.IsKeyDown(KeyCode::Space) && lastPressedEsc) {
       lastPressedEsc = false;
       gameEngine.eraseTexture("difficultyPrompt");
       countDown();
@@ -296,6 +293,7 @@ void GameLoop::loop() {
   // you have to press esc then enter once the game started to quit
   Timer delayBetweenRounds;
   while (!quit) {
+    quit = gameEngine.shouldQuit();
     while (m_GameTimer.ElapsedMillis() < GAME_LOOP_DELAY)
       ;
     m_GameTimer.Reset();

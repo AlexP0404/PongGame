@@ -26,6 +26,7 @@ public:
 
   virtual bool init() = 0;
   virtual bool loadMedia() = 0;
+  virtual bool shouldQuit() = 0;
 
   virtual bool setTextureCoorCentered(const std::string &&textureName, int x,
                                       int y) = 0;
