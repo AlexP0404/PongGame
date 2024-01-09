@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+using std::string;
+
 GameLoop::GameLoop() {
   bounceOffPaddle = false;
   p1Scored = false;

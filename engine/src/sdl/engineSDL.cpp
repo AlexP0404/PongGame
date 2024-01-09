@@ -1,6 +1,10 @@
 #include "engineSDL.hpp"
 #include <iostream>
 
+using std::string;
+using std::unique_ptr;
+using std::vector;
+
 EngineSDL::EngineSDL() {
   gameWindow = nullptr;
   gameRenderer = nullptr;
@@ -80,15 +84,15 @@ bool EngineSDL::init() {
 }
 
 bool EngineSDL::loadMedia() {
-  gameIcon = IMG_Load("dot.bmp");
+  gameIcon = IMG_Load("res/dot.bmp");
   SDL_SetWindowIcon(gameWindow, gameIcon);
 
-  fonts["escFont"] = TTF_OpenFont("lazy.ttf", 15);
+  fonts["escFont"] = TTF_OpenFont("res/lazy.ttf", 15);
   if (fonts.at("escFont") == nullptr) {
     printf("failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError());
     return false;
   }
-  textures["escapePrompt"] = unique_ptr<Texture>(new Texture(
+  textures["escapePrompt"] = unique_ptr<TextureSDL>(new TextureSDL(
       *gameRenderer, 0, 0, true)); // uses full parameter constructor
   if (!textures.at("escapePrompt")
            ->loadFromRenderedText("Press Escape To Quit", textColor,
@@ -97,9 +101,9 @@ bool EngineSDL::loadMedia() {
     return false;
   }
 
-  fonts["mainFont"] = TTF_OpenFont("lazy.ttf", 30);
+  fonts["mainFont"] = TTF_OpenFont("res/lazy.ttf", 30);
 
-  bounce = Mix_LoadWAV("bounce.wav");
+  bounce = Mix_LoadWAV("res/bounce.wav");
   if (bounce == nullptr) {
     printf("Failed to load bounce sound effect! SDL_mixer Error: %s\n",
            Mix_GetError());
@@ -131,7 +135,7 @@ bool EngineSDL::setTextTexture(const string &&textureName,
                                const string &&fontName, const string &text) {
   if (textures.find(textureName) == textures.end()) {
     textures[textureName] =
-        unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, true));
+        unique_ptr<TextureSDL>(new TextureSDL(*gameRenderer, 0, 0, true));
   }
 
   if (fonts.find(fontName) == fonts.end()) {
@@ -151,7 +155,7 @@ bool EngineSDL::createTextureFromFile(const string &&textureName,
     return false;
   }
   textures[textureName] =
-      unique_ptr<Texture>(new Texture(*gameRenderer, 0, 0, false));
+      unique_ptr<TextureSDL>(new TextureSDL(*gameRenderer, 0, 0, false));
 
   return textures.at(textureName)->loadFromFile(fileName.string());
 }

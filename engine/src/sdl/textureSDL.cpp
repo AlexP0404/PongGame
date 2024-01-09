@@ -1,26 +1,27 @@
-#include "Texture.hpp"
+#include "textureSDL.hpp"
 
-Texture::Texture() {
+TextureSDL::TextureSDL() {
   mTexture = NULL;
   mWidth = 0;
   mHeight = 0;
   mIsText = false;
 }
 
-Texture::Texture(SDL_Renderer &renderer, int xCoor, int yCoor, bool isText)
+TextureSDL::TextureSDL(SDL_Renderer &renderer, int xCoor, int yCoor,
+                       bool isText)
     : gameRenderer(&renderer), xCoor(xCoor), yCoor(yCoor), mIsText(isText) {
   mTexture = NULL;
   mWidth = 0;
   mHeight = 0;
 }
 
-Texture::~Texture() { free(); }
+TextureSDL::~TextureSDL() { free(); }
 
-void Texture::setRenderer(SDL_Renderer &renderer) {
+void TextureSDL::setRenderer(SDL_Renderer &renderer) {
   this->gameRenderer = &renderer;
 }
 
-bool Texture::loadFromFile(std::string path) {
+bool TextureSDL::loadFromFile(std::string path) {
   free();
 
   SDL_Texture *newTexture = NULL;
@@ -46,8 +47,8 @@ bool Texture::loadFromFile(std::string path) {
   return mTexture != NULL;
 }
 
-bool Texture::loadFromRenderedText(std::string textureText, SDL_Color textColor,
-                                   TTF_Font *gFont) {
+bool TextureSDL::loadFromRenderedText(std::string textureText,
+                                      SDL_Color textColor, TTF_Font *gFont) {
   // Get rid of preexisting texture
   free();
 
@@ -76,7 +77,7 @@ bool Texture::loadFromRenderedText(std::string textureText, SDL_Color textColor,
   return mTexture != NULL;
 }
 
-void Texture::free() {
+void TextureSDL::free() {
   // Free texture if it exists
   if (mTexture != NULL) {
     SDL_DestroyTexture(mTexture);
@@ -86,23 +87,23 @@ void Texture::free() {
   }
 }
 
-void Texture::setColor(Uint8 red, Uint8 green, Uint8 blue) {
+void TextureSDL::setColor(Uint8 red, Uint8 green, Uint8 blue) {
   // Modulate texture rgb
   SDL_SetTextureColorMod(mTexture, red, green, blue);
 }
 
-void Texture::setBlendMode(SDL_BlendMode blending) {
+void TextureSDL::setBlendMode(SDL_BlendMode blending) {
   // Set blending function
   SDL_SetTextureBlendMode(mTexture, blending);
 }
 
-void Texture::setAlpha(Uint8 alpha) {
+void TextureSDL::setAlpha(Uint8 alpha) {
   // Modulate texture alpha
   SDL_SetTextureAlphaMod(mTexture, alpha);
 }
 
-void Texture::render(SDL_Rect *clip, double angle, SDL_Point *center,
-                     SDL_RendererFlip flip) {
+void TextureSDL::render(SDL_Rect *clip, double angle, SDL_Point *center,
+                        SDL_RendererFlip flip) {
   // Set rendering space and render to screen
   SDL_Rect renderQuad = {xCoor, yCoor, mWidth, mHeight};
 
@@ -117,16 +118,16 @@ void Texture::render(SDL_Rect *clip, double angle, SDL_Point *center,
                    flip);
 }
 
-int Texture::getWidth() { return mWidth; }
+int TextureSDL::getWidth() { return mWidth; }
 
-int Texture::getHeight() { return mHeight; }
+int TextureSDL::getHeight() { return mHeight; }
 
-int Texture::getxCoor() { return xCoor; }
+int TextureSDL::getxCoor() { return xCoor; }
 
-int Texture::getyCoor() { return yCoor; }
+int TextureSDL::getyCoor() { return yCoor; }
 
-void Texture::setxCoor(int x) { xCoor = x; }
+void TextureSDL::setxCoor(int x) { xCoor = x; }
 
-void Texture::setyCoor(int y) { yCoor = y; }
+void TextureSDL::setyCoor(int y) { yCoor = y; }
 
-void Texture::setCoors(int x, int y) { xCoor = x, yCoor = y; }
+void TextureSDL::setCoors(int x, int y) { xCoor = x, yCoor = y; }

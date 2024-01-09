@@ -1,5 +1,5 @@
-#ifndef TEXTURE_HPP
-#define TEXTURE_HPP
+#ifndef TEXTURE_SDL_HPP
+#define TEXTURE_SDL_HPP
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_error.h>
 #include <SDL2/SDL_image.h>
@@ -9,12 +9,12 @@
 
 // this is too specifc to each backend to interface properly
 
-class Texture {
+class TextureSDL {
 public:
-  Texture();
-  Texture(SDL_Renderer &renderer, int xCoor, int yCoor, bool isText);
-  ~Texture();
-  Texture(Texture &t) {
+  TextureSDL();
+  TextureSDL(SDL_Renderer &renderer, int xCoor, int yCoor, bool isText);
+  ~TextureSDL();
+  TextureSDL(TextureSDL &t) {
     t.mTexture = mTexture;
     t.gameRenderer = gameRenderer;
     t.mWidth = mWidth;

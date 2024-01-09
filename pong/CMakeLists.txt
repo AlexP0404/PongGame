@@ -12,3 +12,11 @@ elseif(WIN32)
 endif()
 
 target_link_libraries(pong engine)
+
+add_custom_command(
+  TARGET pong
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E create_symlink ${CMAKE_CURRENT_SOURCE_DIR}/res
+          $<TARGET_FILE_DIR:pong>/res
+  COMMENT "Creating a symlink to resource directory"
+  VERBATIM)

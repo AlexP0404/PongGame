@@ -7,9 +7,6 @@
 
 namespace fs = std::filesystem;
 
-using std::string;
-using std::vector;
-
 class Engine {
 protected:
   int m_ScreenWidth;
@@ -30,20 +27,23 @@ public:
   virtual bool init() = 0;
   virtual bool loadMedia() = 0;
 
-  virtual bool setTextureCoorCentered(const string &&textureName, int x,
+  virtual bool setTextureCoorCentered(const std::string &&textureName, int x,
                                       int y) = 0;
-  virtual bool setTextureCoor(const string &&textureName, int x, int y) = 0;
+  virtual bool setTextureCoor(const std::string &&textureName, int x,
+                              int y) = 0;
 
-  virtual bool setTextTexture(const string &&textureName,
-                              const string &&fontName, const string &text) = 0;
+  virtual bool setTextTexture(const std::string &&textureName,
+                              const std::string &&fontName,
+                              const std::string &text) = 0;
 
-  virtual bool createTextureFromFile(const string &&textureName,
+  virtual bool createTextureFromFile(const std::string &&textureName,
                                      const fs::path &&fileName) = 0;
   virtual void renderTextures() = 0;
   virtual void renderScreen() = 0;
   virtual void clearScreen() = 0;
-  virtual void eraseTextures(const vector<string> &&texturesToErase) = 0;
-  virtual void eraseTexture(const string &&textureName) = 0;
+  virtual void
+  eraseTextures(const std::vector<std::string> &&texturesToErase) = 0;
+  virtual void eraseTexture(const std::string &&textureName) = 0;
   virtual void drawNet() = 0;
   virtual void drawDot(int dotX, int dotY, int dotRadius) = 0;
   virtual void drawPaddles(int p1X, int p1Y, int p2X, int p2Y) = 0;

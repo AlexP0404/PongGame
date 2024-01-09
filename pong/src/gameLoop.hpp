@@ -18,7 +18,6 @@ typtypedef EngineVLK engine;
 #include "scoreboard.hpp"
 #include "timer.hpp"
 
-using std::string;
 // then add networking (UDP?) to make it online multiplayer
 // Move rendering/non-gameloop-mechanics to "Render" class
 
@@ -60,9 +59,9 @@ private:
   Paddle p2;
   AI ai1, ai2;
 
-  string mainText;
-  string difficultySelectText;
-  string modeSelectText;
+  std::string mainText;
+  std::string difficultySelectText;
+  std::string modeSelectText;
 
   int modeSelection;
   bool bounceOffPaddle;
