@@ -4,7 +4,7 @@ project(pongGame)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
-option(ENGINE_USE_VLK "Use the vulkan & GLFW backend" OFF)
+option(ENGINE_USE_VLK "Use the vulkan & GLFW backend" ON)
 
 add_subdirectory(engine)
 add_subdirectory(pong)

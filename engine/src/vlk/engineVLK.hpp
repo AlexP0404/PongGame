@@ -2,6 +2,9 @@
 #define ENGINE_VLK_HPP
 
 #include "engine.hpp"
+#include "inputsVLK.hpp"
+
+#include <GLFW/glfw3.h>
 
 class EngineVLK : public Engine {
 
@@ -31,6 +34,15 @@ public:
   void drawDot(int dotX, int dotY, int dotRadius) override;
   void drawPaddles(int p1X, int p1Y, int p2X, int p2Y) override;
   void playBounce() override;
+
+  GLFWwindow *getWindowHandle();
+
+  static EngineVLK &Get();
+  inputVLK inputs;
+
+private:
+  // the window handle to the GLFW window
+  GLFWwindow *m_window;
 };
 
 #endif

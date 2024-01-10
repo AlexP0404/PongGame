@@ -3,7 +3,7 @@ project(libengine)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(GCC_COVERAGE_COMPILE_FLAGS "-O2")
+set(GCC_COVERAGE_COMPILE_FLAGS "")
 
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
@@ -28,7 +28,7 @@ if(ENGINE_USE_VLK)
 
   target_link_libraries(engine PUBLIC Vulkan::Vulkan Vulkan::Headers)
   target_link_libraries(engine PUBLIC glfw)
-  target_link_libraries(engine PUBLIC glm)
+  target_link_libraries(engine PUBLIC glm::glm)
   target_link_libraries(engine PUBLIC OpenAL::OpenAL)
 
   target_include_directories(
