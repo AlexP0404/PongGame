@@ -27,6 +27,7 @@ bool GameLoop::init() {
 
   gameEngine.setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
   gameEngine.setPaddleSize(PADDLE_WIDTH, PADDLE_HEIGHT);
+  gameEngine.setTitle("PONG!");
 
   if (!gameEngine.init() || !gameEngine.loadMedia()) {
     return false;
@@ -198,34 +199,34 @@ void GameLoop::handleInputs() {
   if (inputDelayTimer.ElapsedMillis() < 8.0f)
     return;
   inputDelayTimer.Reset();
-  gameEngine.inputs.updateKeyStates(); // refresh they keyboard buffer
-  if (!start) {                        // if still at start screen
-    if (gameEngine.inputs.IsKeyDown(KeyCode::Escape)) // escape key to quit
+  input.updateKeyStates();                // refresh they keyboard buffer
+  if (!start) {                           // if still at start screen
+    if (input.IsKeyDown(KeyCode::Escape)) // escape key to quit
       quit = true;
-    if (gameEngine.inputs.IsKeyDown(KeyCode::Left) &&
+    if (input.IsKeyDown(KeyCode::Left) &&
         selectionDelay.ElapsedMillis() > 200.0f) { // debounce arrows
       selectionDelay.Reset();
       setSpeed(-1); // change speed to slower
     }
-    if (gameEngine.inputs.IsKeyDown(KeyCode::Right) &&
+    if (input.IsKeyDown(KeyCode::Right) &&
         selectionDelay.ElapsedMillis() > 200.0f) {
       selectionDelay.Reset();
       setSpeed(1);
     }
-    if (gameEngine.inputs.IsKeyDown(KeyCode::D1) &&
+    if (input.IsKeyDown(KeyCode::D1) &&
         selectionDelay.ElapsedMillis() > 200.0f) {
       selectionDelay.Reset();
       modeSelection = 1;
       setMode();
     }
-    if (gameEngine.inputs.IsKeyDown(KeyCode::D2) &&
+    if (input.IsKeyDown(KeyCode::D2) &&
         selectionDelay.ElapsedMillis() > 200.0f) {
       selectionDelay.Reset();
       modeSelection = 2;
       setMode();
     }
 
-    if (gameEngine.inputs.IsKeyDown(KeyCode::Enter)) { // enter key to start
+    if (input.IsKeyDown(KeyCode::Enter)) { // enter key to start
       gameEngine.eraseTextures(
           {"modeSelectPrompt", "difficultyPrompt"}); // countdown starts
       countDown();
@@ -244,7 +245,7 @@ void GameLoop::handleInputs() {
       dot.set();
     }
   } else { // game started (now this is used for player controls) start = true
-    if (gameEngine.inputs.IsKeyDown(KeyCode::Escape)) {
+    if (input.IsKeyDown(KeyCode::Escape)) {
       if (lastPressedEsc) {
         return;
       }
@@ -256,17 +257,16 @@ void GameLoop::handleInputs() {
     }
     // all the other cases now update lastPressedEsc to true because it
     // wasnt pressed 2x in a row
-    if (gameEngine.inputs.IsKeyDown(KeyCode::Enter) && lastPressedEsc)
+    if (input.IsKeyDown(KeyCode::Enter) && lastPressedEsc)
       quit = true;
     if (!singlePlayer) {
-      if (gameEngine.inputs.IsKeyDown(
-              KeyCode::W)) // start of the player controls
+      if (input.IsKeyDown(KeyCode::W)) // start of the player controls
         p1.move(true);
-      if (gameEngine.inputs.IsKeyDown(KeyCode::S))
+      if (input.IsKeyDown(KeyCode::S))
         p1.move(false);
-      if (gameEngine.inputs.IsKeyDown(KeyCode::Up))
+      if (input.IsKeyDown(KeyCode::Up))
         p2.move(true);
-      if (gameEngine.inputs.IsKeyDown(KeyCode::Down))
+      if (input.IsKeyDown(KeyCode::Down))
         p2.move(false);
     } else { // singleplayer
       int numAImoves = p2.genRandNum(5);
@@ -275,7 +275,7 @@ void GameLoop::handleInputs() {
         ai2.movePaddle();
       }
     }
-    if (gameEngine.inputs.IsKeyDown(KeyCode::Space) && lastPressedEsc) {
+    if (input.IsKeyDown(KeyCode::Space) && lastPressedEsc) {
       lastPressedEsc = false;
       gameEngine.eraseTexture("difficultyPrompt");
       countDown();

@@ -1,5 +1,9 @@
 #include "gameLoop.hpp"
+#include <cstdlib>
+#include <exception>
 #include <iostream>
+
+#define STB_IMAGE_IMPLEMENTATION
 
 int main() {
 
@@ -8,8 +12,11 @@ int main() {
     std::cout << "Game Loop failed to initialize!\n";
     return -1;
   }
-
-  pongLoop.loop();
-
-  return 0;
+  try {
+    pongLoop.loop();
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
+  return EXIT_SUCCESS;
 }

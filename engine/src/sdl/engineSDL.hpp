@@ -10,7 +10,6 @@
 #include <SDL2/SDL_ttf.h>
 
 #include "engine.hpp"
-#include "inputSDL.hpp"
 #include "textureSDL.hpp"
 
 struct FontDeleter {
@@ -49,8 +48,6 @@ public:
   void drawDot(int dotX, int dotY, int dotRadius) override;
   void drawPaddles(int p1X, int p1Y, int p2X, int p2Y) override;
   void playBounce() override;
-
-  inputSDL inputs;
 
 private:
   SDL_Window *gameWindow;

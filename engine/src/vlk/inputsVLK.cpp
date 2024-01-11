@@ -5,10 +5,14 @@
 inputVLK::~inputVLK() { windowHandle = nullptr; }
 
 void inputVLK::updateKeyStates() {
-  windowHandle = EngineVLK::Get().getWindowHandle();
+  windowHandle = EngineVLK::Get().PFN_getRenderer()->getWindow();
 }
 
 bool inputVLK::IsKeyDown(KeyCode key) {
+  if (windowHandle ==
+      nullptr) // somehow if window isn't create yet or already destroyed
+    return false;
+
   int state = glfwGetKey(windowHandle, (int)key);
   return state == GLFW_PRESS || state == GLFW_REPEAT;
 }

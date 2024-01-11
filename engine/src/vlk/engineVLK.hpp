@@ -2,13 +2,13 @@
 #define ENGINE_VLK_HPP
 
 #include "engine.hpp"
-#include "inputsVLK.hpp"
-
-#include <GLFW/glfw3.h>
+#include "renderer.hpp"
 
 class EngineVLK : public Engine {
 
 public:
+  static EngineVLK &Get();
+
   EngineVLK();
   ~EngineVLK() override;
 
@@ -35,14 +35,10 @@ public:
   void drawPaddles(int p1X, int p1Y, int p2X, int p2Y) override;
   void playBounce() override;
 
-  GLFWwindow *getWindowHandle();
-
-  static EngineVLK &Get();
-  inputVLK inputs;
+  Renderer *PFN_getRenderer();
 
 private:
-  // the window handle to the GLFW window
-  GLFWwindow *m_window;
+  Renderer m_Renderer;
 };
 
 #endif

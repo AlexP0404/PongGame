@@ -45,8 +45,8 @@ bool EngineSDL::init() {
       printf("Warning: Linear texture filtering not enabled!");
     }
     gameWindow = SDL_CreateWindow(
-        "Pong", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_ScreenWidth,
-        m_ScreenHeight,
+        m_GameTitle.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+        m_ScreenWidth, m_ScreenHeight,
         SDL_WINDOW_SHOWN | SDL_WINDOW_BORDERLESS | SDL_WINDOW_INPUT_FOCUS);
     if (gameWindow == nullptr) {
       printf("Window could not be created! SDL Error: %s\n", SDL_GetError());

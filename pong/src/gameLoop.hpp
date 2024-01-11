@@ -7,13 +7,17 @@
 
 #ifndef ENGINE_USE_VLK
 #include "engineSDL.hpp"
+#include "inputSDL.hpp"
 typedef EngineSDL selectedEngine;
+typedef inputSDL Input;
 #else
 #include "engineVLK.hpp"
+#include "inputsVLK.hpp"
 typedef EngineVLK selectedEngine;
+typedef inputVLK Input;
 #endif
 
-#include "ai.hpp" //has paddle included already (I know I could include both because of header guards but whatevs)
+#include "ai.hpp"
 #include "dot.hpp"
 #include "scoreboard.hpp"
 #include "timer.hpp"
@@ -51,6 +55,7 @@ private:
 
 private:
   selectedEngine gameEngine;
+  Input input;
 
   Dot dot;
   Scoreboard sb;

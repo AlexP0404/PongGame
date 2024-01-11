@@ -13,6 +13,7 @@ protected:
   int m_ScreenHeight;
   int m_PaddleWidth;
   int m_PaddleHeight;
+  std::string m_GameTitle;
 
 public:
   void setPaddleSize(int width, int height) {
@@ -21,6 +22,7 @@ public:
   void setScreenSize(const int screenWidth, const int screenHeight) {
     m_ScreenWidth = screenWidth, m_ScreenHeight = screenHeight;
   }
+  void setTitle(const std::string &&title) { m_GameTitle = title; }
 
   virtual ~Engine() = default;
 

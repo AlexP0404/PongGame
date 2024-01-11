@@ -1,4 +1,5 @@
 #include "engineVLK.hpp"
+#include "renderer.hpp"
 
 // allows things like the input class to access the current application instance
 // while avoiding creating a whole new engine object
@@ -13,4 +14,51 @@ EngineVLK::~EngineVLK() {
   s_Instance = nullptr; // instance is no longer valid
 }
 
-GLFWwindow *EngineVLK::getWindowHandle() { return m_window; }
+bool EngineVLK::init() {
+  return m_Renderer.initWindow(m_ScreenWidth, m_ScreenHeight, m_GameTitle);
+}
+
+bool EngineVLK::loadMedia() { return true; }
+
+bool EngineVLK::shouldQuit() { return m_Renderer.windowShouldClose(); }
+
+bool EngineVLK::setTextureCoorCentered(const std::string &&textureName, int x,
+                                       int y) {
+  return true;
+}
+
+bool EngineVLK::setTextureCoor(const std::string &&textureName, int x, int y) {
+  return true;
+}
+
+bool EngineVLK::setTextTexture(const std::string &&textureName,
+                               const std::string &&fontName,
+                               const std::string &text) {
+  return true;
+}
+
+bool EngineVLK::createTextureFromFile(const std::string &&textureName,
+                                      const fs::path &&fileName) {
+  return true;
+}
+
+void EngineVLK::renderTextures() {}
+
+void EngineVLK::renderScreen() { m_Renderer.renderScreen(); }
+
+void EngineVLK::clearScreen() {}
+
+void EngineVLK::eraseTextures(
+    const std::vector<std::string> &&texturesToErase) {}
+
+void EngineVLK::eraseTexture(const std::string &&textureName) {}
+
+void EngineVLK::drawNet() {}
+
+void EngineVLK::drawDot(int dotX, int dotY, int dotRadius) {}
+
+void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {}
+
+void EngineVLK::playBounce() {}
+
+Renderer *EngineVLK::PFN_getRenderer() { return &m_Renderer; }
