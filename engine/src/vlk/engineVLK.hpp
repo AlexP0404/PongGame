@@ -3,6 +3,8 @@
 
 #include "engine.hpp"
 #include "renderer.hpp"
+#include "windowVLK.hpp"
+#include <memory>
 
 class EngineVLK : public Engine {
 
@@ -35,10 +37,12 @@ public:
   void drawPaddles(int p1X, int p1Y, int p2X, int p2Y) override;
   void playBounce() override;
 
-  Renderer *PFN_getRenderer();
+  std::shared_ptr<Renderer> PFN_GetRenderer();
+  std::shared_ptr<windowVLK> PFN_GetWindowVLK();
 
 private:
-  Renderer m_Renderer;
+  std::shared_ptr<Renderer> mpRenderer;
+  std::shared_ptr<windowVLK> mpWindow;
 };
 
 #endif

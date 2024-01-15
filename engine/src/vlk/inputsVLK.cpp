@@ -5,7 +5,7 @@
 inputVLK::~inputVLK() { windowHandle = nullptr; }
 
 void inputVLK::updateKeyStates() {
-  windowHandle = EngineVLK::Get().PFN_getRenderer()->getWindow();
+  windowHandle = EngineVLK::Get().PFN_GetWindowVLK()->getWindowHandle();
 }
 
 bool inputVLK::IsKeyDown(KeyCode key) {

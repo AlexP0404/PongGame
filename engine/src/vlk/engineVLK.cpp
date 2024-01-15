@@ -1,5 +1,6 @@
 #include "engineVLK.hpp"
 #include "renderer.hpp"
+#include <memory>
 
 // allows things like the input class to access the current application instance
 // while avoiding creating a whole new engine object
@@ -15,12 +16,14 @@ EngineVLK::~EngineVLK() {
 }
 
 bool EngineVLK::init() {
-  return m_Renderer.initWindow(m_ScreenWidth, m_ScreenHeight, m_GameTitle);
+  mpWindow = std::unique_ptr<windowVLK>(
+      new windowVLK(m_ScreenWidth, m_ScreenHeight, m_GameTitle));
+  return mpWindow != nullptr;
 }
 
 bool EngineVLK::loadMedia() { return true; }
 
-bool EngineVLK::shouldQuit() { return m_Renderer.windowShouldClose(); }
+bool EngineVLK::shouldQuit() { return mpWindow->windowShouldClose(); }
 
 bool EngineVLK::setTextureCoorCentered(const std::string &&textureName, int x,
                                        int y) {
@@ -44,7 +47,7 @@ bool EngineVLK::createTextureFromFile(const std::string &&textureName,
 
 void EngineVLK::renderTextures() {}
 
-void EngineVLK::renderScreen() { m_Renderer.renderScreen(); }
+void EngineVLK::renderScreen() { mpWindow->pollEvents(); }
 
 void EngineVLK::clearScreen() {}
 
@@ -61,4 +64,5 @@ void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {}
 
 void EngineVLK::playBounce() {}
 
-Renderer *EngineVLK::PFN_getRenderer() { return &m_Renderer; }
+std::shared_ptr<Renderer> EngineVLK::PFN_GetRenderer() { return mpRenderer; }
+std::shared_ptr<windowVLK> EngineVLK::PFN_GetWindowVLK() { return mpWindow; }

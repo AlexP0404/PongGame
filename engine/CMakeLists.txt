@@ -26,14 +26,14 @@ if(ENGINE_USE_VLK)
 
   add_library(engine STATIC ${ENGINE_SRC})
 
-  target_link_libraries(engine PUBLIC Vulkan::Vulkan Vulkan::Headers)
+  target_link_libraries(engine PUBLIC Vulkan::Vulkan)
   target_link_libraries(engine PUBLIC glfw)
   target_link_libraries(engine PUBLIC glm::glm)
   target_link_libraries(engine PUBLIC OpenAL::OpenAL)
 
   target_include_directories(
     engine PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src"
-                  "${CMAKE_CURRENT_SOURCE_DIR}/src/vlk")
+                  "${CMAKE_CURRENT_SOURCE_DIR}/src/vlk" Vulkan::Headers)
 
   target_compile_definitions(engine PUBLIC ENGINE_USE_VLK)
 else()
