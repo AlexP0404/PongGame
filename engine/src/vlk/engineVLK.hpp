@@ -38,11 +38,11 @@ public:
   void playBounce() override;
 
   std::shared_ptr<Renderer> PFN_GetRenderer();
-  std::shared_ptr<windowVLK> PFN_GetWindowVLK();
+  std::shared_ptr<WindowVLK> PFN_GetWindowVLK();
 
 private:
   std::shared_ptr<Renderer> mpRenderer;
-  std::shared_ptr<windowVLK> mpWindow;
+  std::shared_ptr<WindowVLK> mpWindow;
 };
 
 #endif

@@ -1,22 +1,22 @@
 #ifndef WINDOW_VLK_HPP
 #define WINDOW_VLK_HPP
 
-#include <vector>
-#include <vulkan/vulkan.h>
+#include "vulkanInit.hpp"
+#include "vulkanRenderData.hpp"
 
 #include <string_view>
-#include <vulkan/vulkan_core.h>
 
 struct GLFWwindow;
 
-class windowVLK {
+class WindowVLK {
 public:
-  windowVLK(int pWindowWidth, int pWindowHeight,
+  explicit WindowVLK(const std::string_view &pWindowTitle);
+  WindowVLK(int pWindowWidth, int pWindowHeight,
             const std::string_view &pWindowTitle);
-  ~windowVLK();
+  ~WindowVLK();
 
-  static void frameBufferResizeCallback(GLFWwindow *pWindow, int pWidth,
-                                        int pHeight);
+  void initVulkan();
+
   void pollEvents();
   bool windowShouldClose();
 
@@ -24,30 +24,15 @@ public:
 
 private:
   void initWindow(int pWindowWidth, int pWindowHeight);
-  void initVulkan();
-  void cleanUpVulkan();
-  void createInstance();
-  inline const std::vector<const char *> getRequiredExtensions();
-  bool checkValidationLayerSupport();
-  void populateDebugMessengerCreateInfo(
-      VkDebugUtilsMessengerCreateInfoEXT &createInfo);
-  void setupDebugMessenger();
-  static VKAPI_ATTR VkBool32 VKAPI_CALL
-  debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                VkDebugUtilsMessageTypeFlagsEXT messageType,
-                const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                void *pUserData);
-
-  template <typename T> void zeroInitializeStruct(T &a);
+  static void frameBufferResizeCallback(GLFWwindow *pWindow, int pWidth,
+                                        int pHeight);
 
 private:
   std::string_view mWindowTitle;
   bool mFrameBufferResized;
   GLFWwindow *mWindowHandle;
-
-  VkInstance mInstance;
-  std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-  VkDebugUtilsMessengerEXT debugMessenger;
+  VulkanInit mVLKInit;
+  VulkanRenderData mVLKData;
 };
 
 #endif

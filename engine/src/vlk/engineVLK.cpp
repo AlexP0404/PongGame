@@ -16,8 +16,8 @@ EngineVLK::~EngineVLK() {
 }
 
 bool EngineVLK::init() {
-  mpWindow = std::unique_ptr<windowVLK>(
-      new windowVLK(m_ScreenWidth, m_ScreenHeight, m_GameTitle));
+  mpWindow = std::unique_ptr<WindowVLK>(
+      new WindowVLK(m_ScreenWidth, m_ScreenHeight, m_GameTitle));
   return mpWindow != nullptr;
 }
 
@@ -65,4 +65,4 @@ void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {}
 void EngineVLK::playBounce() {}
 
 std::shared_ptr<Renderer> EngineVLK::PFN_GetRenderer() { return mpRenderer; }
-std::shared_ptr<windowVLK> EngineVLK::PFN_GetWindowVLK() { return mpWindow; }
+std::shared_ptr<WindowVLK> EngineVLK::PFN_GetWindowVLK() { return mpWindow; }
