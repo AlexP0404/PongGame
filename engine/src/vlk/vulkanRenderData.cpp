@@ -7,7 +7,8 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
-#include <vulkan/vulkan_core.h>
+
+const int MAX_FRAMES_IN_FLIGHT = 2;
 
 VulkanRenderData::VulkanRenderData() {}
 

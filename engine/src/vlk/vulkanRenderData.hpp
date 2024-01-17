@@ -12,6 +12,10 @@ public:
   ~VulkanRenderData();
   void initRenderData(std::shared_ptr<VulkanInit> pInit);
 
+  void BeginBatch();
+  void EndBatch();
+  void Flush();
+
 public:
   VkQueue mGraphicsQueue;
   VkQueue mPresentQueue;
@@ -23,6 +27,12 @@ public:
   VkRenderPass mRenderPass;
   VkPipelineLayout mPipelineLayout;
   VkPipeline mGraphicsPipeline;
+
+  VkCommandPool mCommandPool;
+  std::vector<VkCommandBuffer> mCommandBuffers;
+
+  std::vector<VkSemaphore> mSemaphores;
+  std::vector<VkFence> mFences;
 
 private:
   void initQueues();
