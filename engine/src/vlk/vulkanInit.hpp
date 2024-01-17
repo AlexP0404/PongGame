@@ -2,11 +2,13 @@
 #define VULKAN_INIT_HPP
 
 #include <cstdint>
+#include <cstring> //memset
 #include <optional>
 #include <string_view>
 #include <vector>
 
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 struct GLFWwindow;
 
@@ -16,11 +18,18 @@ public: // funcs
   ~VulkanInit();
   void Init(GLFWwindow *pWindowHandle, const std::string_view &pWindowTitle);
 
+  template <typename T> inline static void zeroInitializeStruct(T &a) {
+    static_assert(std::is_class<T>::value, "T must be a struct! (or class)");
+    memset(&a, 0, sizeof(a));
+  }
+
 public: // objects
   VkInstance mInstance;
   VkSurfaceKHR mSurface;
   VkDevice mLogicalDevice;
   VkSwapchainKHR mSwapChain;
+  VkFormat mSwapChainImageFormat;
+  VkExtent2D mSwapChainExtent;
 
   struct QueueFamilyIndicies {
     std::optional<uint32_t> graphicsFamily;
@@ -60,7 +69,19 @@ private: // funcs
   // logical device
   void createLogicalDevice();
 
-  template <typename T> inline void zeroInitializeStruct(T &a);
+  // swap chain and window surface
+  struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+  };
+  SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice pDevice);
+  VkSurfaceFormatKHR chooseSwapSurfaceFormat(
+      const std::vector<VkSurfaceFormatKHR> &availableFormats);
+  VkPresentModeKHR chooseSwapPresentMode(
+      const std::vector<VkPresentModeKHR> &availablePresentModes);
+  VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
+  void createSwapChain();
 
 private: // objects
   GLFWwindow *mWindowHandle;

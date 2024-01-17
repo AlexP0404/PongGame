@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 option(ENGINE_USE_VLK "Use the vulkan & GLFW backend" ON)
+if(ENGINE_USE_VLK)
+  set(SHADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}/engine/src/vlk/shaders")
+endif()
 
 add_subdirectory(engine)
 add_subdirectory(pong)

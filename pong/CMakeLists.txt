@@ -20,3 +20,13 @@ add_custom_command(
           $<TARGET_FILE_DIR:pong>/res
   COMMENT "Creating a symlink to resource directory"
   VERBATIM)
+
+if(ENGINE_USE_VLK)
+  add_custom_command(
+    TARGET pong
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E create_symlink ${SHADER_DIR}
+            $<TARGET_FILE_DIR:pong>/shaders
+    COMMENT "Creating a symlink to shaders directory"
+    VERBATIM)
+endif()

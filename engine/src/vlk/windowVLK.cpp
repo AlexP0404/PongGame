@@ -1,9 +1,9 @@
 #include "windowVLK.hpp"
 #include "vulkanInit.hpp"
-#include "vulkanRenderData.hpp"
 
 #include <GLFW/glfw3.h>
 
+#include <memory>
 #include <stdexcept> //throw runtime_error
 
 WindowVLK::WindowVLK(const std::string_view &pWindowTitle)
@@ -33,13 +33,10 @@ WindowVLK::~WindowVLK() {
 }
 
 void WindowVLK::initVulkan() {
-  mVLKInit.Init(mWindowHandle, mWindowTitle);
-  mVLKData.initQueue(mVLKInit.mLogicalDevice,
-                     mVLKInit.mQFIndices.graphicsFamily.value(), GRAPHICS);
-  mVLKData.initQueue(mVLKInit.mLogicalDevice,
-                     mVLKInit.mQFIndices.presentFamily.value(), PRESENT);
+  mVLKInit = std::shared_ptr<VulkanInit>(new VulkanInit);
+  mVLKInit->Init(mWindowHandle, mWindowTitle);
+  mVLKData.initRenderData(mVLKInit);
 }
-
 void WindowVLK::pollEvents() { glfwPollEvents(); }
 
 bool WindowVLK::windowShouldClose() {

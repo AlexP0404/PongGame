@@ -4,6 +4,7 @@
 #include "vulkanInit.hpp"
 #include "vulkanRenderData.hpp"
 
+#include <memory>
 #include <string_view>
 
 struct GLFWwindow;
@@ -31,7 +32,7 @@ private:
   std::string_view mWindowTitle;
   bool mFrameBufferResized;
   GLFWwindow *mWindowHandle;
-  VulkanInit mVLKInit;
+  std::shared_ptr<VulkanInit> mVLKInit;
   VulkanRenderData mVLKData;
 };
 
