@@ -1,11 +1,13 @@
 #include "vulkanInit.hpp"
+
+#include "utils.hpp"
+
 #include <algorithm> //clamp
 #include <cstdint>   //uint32_t
 #include <iostream>  //cerr
 #include <limits>    //numeric_limits
 #include <set>       //
 #include <stdexcept> //runtime_error
-#include <vulkan/vulkan_core.h>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -67,7 +69,7 @@ void VulkanInit::createInstance() {
     throw std::runtime_error("Validation layers enabled, but not available!");
   }
   VkApplicationInfo appInfo{};
-  zeroInitializeStruct(appInfo);
+  Utils::zeroInitializeStruct(appInfo);
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.pApplicationName = mWindowTitle.data();
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -76,7 +78,7 @@ void VulkanInit::createInstance() {
   appInfo.apiVersion = VK_API_VERSION_1_0;
 
   VkInstanceCreateInfo createInfo{};
-  zeroInitializeStruct(createInfo);
+  Utils::zeroInitializeStruct(createInfo);
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo = &appInfo;
 
@@ -151,7 +153,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanInit::debugCallback(
 const void VulkanInit::populateDebugMessengerCreateInfo(
     VkDebugUtilsMessengerCreateInfoEXT &createInfo) {
 
-  zeroInitializeStruct(createInfo);
+  Utils::zeroInitializeStruct(createInfo);
   createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
   createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
@@ -261,7 +263,7 @@ void VulkanInit::createLogicalDevice() {
   float queuePriority = 1.0f;
   for (auto queueFam : uniqueQueueFamiles) {
     VkDeviceQueueCreateInfo queueCreateInfo;
-    zeroInitializeStruct(queueCreateInfo);
+    Utils::zeroInitializeStruct(queueCreateInfo);
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = mQFIndices.graphicsFamily.value();
     queueCreateInfo.queueCount = 1;
@@ -269,10 +271,10 @@ void VulkanInit::createLogicalDevice() {
     queueCreateInfos.push_back(queueCreateInfo);
   }
   VkPhysicalDeviceFeatures deviceFeatures{};
-  zeroInitializeStruct(deviceFeatures);
+  Utils::zeroInitializeStruct(deviceFeatures);
 
   VkDeviceCreateInfo createInfo{};
-  zeroInitializeStruct(createInfo);
+  Utils::zeroInitializeStruct(createInfo);
   createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   createInfo.queueCreateInfoCount =
       static_cast<uint32_t>(queueCreateInfos.size());
@@ -381,7 +383,7 @@ void VulkanInit::createSwapChain() {
   }
 
   VkSwapchainCreateInfoKHR createInfo{};
-  zeroInitializeStruct(createInfo);
+  Utils::zeroInitializeStruct(createInfo);
   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   createInfo.surface = mSurface;
   createInfo.minImageCount = imageCount;
@@ -417,4 +419,18 @@ void VulkanInit::createSwapChain() {
 
   mSwapChainImageFormat = surfaceFormat.format;
   mSwapChainExtent = extent;
+}
+
+void VulkanInit::updateWindowDimensions() {
+  int width = 0, height = 0;
+  glfwGetFramebufferSize(mWindowHandle, &width, &height);
+  while (width == 0 || height == 0) {
+    glfwGetFramebufferSize(mWindowHandle, &width, &height);
+    glfwWaitEvents();
+  }
+  vkDeviceWaitIdle(mLogicalDevice);
+  // destroy swapchain then recreate it with correct size
+  vkDestroySwapchainKHR(mLogicalDevice, mSwapChain, nullptr);
+
+  createSwapChain();
 }

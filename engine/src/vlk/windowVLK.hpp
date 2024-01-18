@@ -1,10 +1,6 @@
 #ifndef WINDOW_VLK_HPP
 #define WINDOW_VLK_HPP
 
-#include "vulkanInit.hpp"
-#include "vulkanRenderData.hpp"
-
-#include <memory>
 #include <string_view>
 
 struct GLFWwindow;
@@ -16,12 +12,12 @@ public:
             const std::string_view &pWindowTitle);
   ~WindowVLK();
 
-  void initVulkan();
-
   void pollEvents();
   bool windowShouldClose();
 
   GLFWwindow *getWindowHandle();
+
+  bool mFrameBufferResized; // used for swapchain recreation
 
 private:
   void initWindow(int pWindowWidth, int pWindowHeight);
@@ -30,10 +26,7 @@ private:
 
 private:
   std::string_view mWindowTitle;
-  bool mFrameBufferResized;
   GLFWwindow *mWindowHandle;
-  std::shared_ptr<VulkanInit> mVLKInit;
-  VulkanRenderData mVLKData;
 };
 
 #endif

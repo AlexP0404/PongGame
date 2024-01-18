@@ -1,6 +1,5 @@
 #include "engineVLK.hpp"
 #include "renderer.hpp"
-#include <memory>
 
 // allows things like the input class to access the current application instance
 // while avoiding creating a whole new engine object
@@ -18,7 +17,9 @@ EngineVLK::~EngineVLK() {
 bool EngineVLK::init() {
   mpWindow = std::unique_ptr<WindowVLK>(
       new WindowVLK(m_ScreenWidth, m_ScreenHeight, m_GameTitle));
-  return mpWindow != nullptr;
+  mpRenderer = std::unique_ptr<Renderer>(
+      new Renderer(mpWindow->getWindowHandle(), m_GameTitle));
+  return mpWindow != nullptr && mpRenderer != nullptr;
 }
 
 bool EngineVLK::loadMedia() { return true; }
@@ -47,7 +48,23 @@ bool EngineVLK::createTextureFromFile(const std::string &&textureName,
 
 void EngineVLK::renderTextures() {}
 
-void EngineVLK::renderScreen() { mpWindow->pollEvents(); }
+void EngineVLK::renderScreen() {
+  mpWindow->pollEvents();
+  if (mpWindow->mFrameBufferResized) {
+    // if the window was resized/minimized, tell the renderer to resize
+    // swapchain stuff, then once the renderer adjusts, toggle it back off so
+    // the renderer doesnt waste time recreating swapchain stuff
+    //
+    // sends true first
+    mpRenderer->setFrameBufferResized(mpWindow->mFrameBufferResized);
+    mpRenderer->renderScreen();
+    // then false
+    mpRenderer->setFrameBufferResized(mpWindow->mFrameBufferResized = false);
+  } else {
+    // window not resized
+    mpRenderer->renderScreen();
+  }
+}
 
 void EngineVLK::clearScreen() {}
 

@@ -2,13 +2,11 @@
 #define VULKAN_INIT_HPP
 
 #include <cstdint>
-#include <cstring> //memset
 #include <optional>
 #include <string_view>
 #include <vector>
 
 #include <vulkan/vulkan.h>
-#include <vulkan/vulkan_core.h>
 
 struct GLFWwindow;
 
@@ -17,11 +15,7 @@ public: // funcs
   VulkanInit() {}
   ~VulkanInit();
   void Init(GLFWwindow *pWindowHandle, const std::string_view &pWindowTitle);
-
-  template <typename T> inline static void zeroInitializeStruct(T &a) {
-    static_assert(std::is_class<T>::value, "T must be a struct! (or class)");
-    memset(&a, 0, sizeof(a));
-  }
+  void updateWindowDimensions();
 
 public: // objects
   VkInstance mInstance;

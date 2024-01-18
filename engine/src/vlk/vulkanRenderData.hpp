@@ -3,6 +3,7 @@
 
 #include "vulkanInit.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -11,10 +12,11 @@ public:
   explicit VulkanRenderData();
   ~VulkanRenderData();
   void initRenderData(std::shared_ptr<VulkanInit> pInit);
-
-  void BeginBatch();
-  void EndBatch();
-  void Flush();
+  void drawFrame(bool pFrameBufferResized);
+  // these are used by the renderer class
+  static void BeginBatch();
+  static void EndBatch();
+  static void Flush();
 
 public:
   VkQueue mGraphicsQueue;
@@ -31,22 +33,30 @@ public:
   VkCommandPool mCommandPool;
   std::vector<VkCommandBuffer> mCommandBuffers;
 
-  std::vector<VkSemaphore> mSemaphores;
-  std::vector<VkFence> mFences;
+  std::vector<VkSemaphore> mImgAvailSemaphores;
+  std::vector<VkSemaphore> mRndrFinSemaphores;
+  std::vector<VkFence> mInFlightFences;
 
 private:
   void initQueues();
   void getSwapChainImages();
   void createImageViews();
+  void recreateSwapchain();
   void createRenderPass();
   void createGraphicsPipeline();
   void createFramebuffers();
+  void createCommandPool();
+  void createCommandBuffers();
+  void recordCommandBuffer(VkCommandBuffer pCommandBuffer,
+                           uint32_t pImageIndex);
+  void createSyncObjects();
 
   static std::vector<char> readShader(const std::string &pFilename);
   VkShaderModule createShaderModule(const std::vector<char> &code);
 
 private:
   std::shared_ptr<VulkanInit> mInit;
+  uint32_t mCurrentFrame;
 };
 
 #endif

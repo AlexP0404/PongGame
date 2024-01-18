@@ -1,16 +1,13 @@
 #include "windowVLK.hpp"
-#include "vulkanInit.hpp"
 
 #include <GLFW/glfw3.h>
 
-#include <memory>
 #include <stdexcept> //throw runtime_error
 
 WindowVLK::WindowVLK(const std::string_view &pWindowTitle)
     : mWindowTitle(pWindowTitle) {
   mFrameBufferResized = false;
   initWindow(1280, 720); // default resolution
-  initVulkan();
 }
 
 WindowVLK::WindowVLK(int pWindowWidth, int pWindowHeight,
@@ -18,7 +15,6 @@ WindowVLK::WindowVLK(int pWindowWidth, int pWindowHeight,
     : mWindowTitle(pWindowTitle) {
   mFrameBufferResized = false; // init variables
   initWindow(pWindowWidth, pWindowHeight);
-  initVulkan();
 }
 
 void WindowVLK::frameBufferResizeCallback(GLFWwindow *pWindow, int pWidth,
@@ -31,19 +27,6 @@ WindowVLK::~WindowVLK() {
   glfwDestroyWindow(mWindowHandle);
   glfwTerminate();
 }
-
-void WindowVLK::initVulkan() {
-  mVLKInit = std::shared_ptr<VulkanInit>(new VulkanInit);
-  mVLKInit->Init(mWindowHandle, mWindowTitle);
-  mVLKData.initRenderData(mVLKInit);
-}
-void WindowVLK::pollEvents() { glfwPollEvents(); }
-
-bool WindowVLK::windowShouldClose() {
-  return glfwWindowShouldClose(mWindowHandle);
-}
-
-GLFWwindow *WindowVLK::getWindowHandle() { return mWindowHandle; }
 
 void WindowVLK::initWindow(int pWindowWidth, int pWindowHeight) {
   glfwInit(); // init GLFW
@@ -63,3 +46,11 @@ void WindowVLK::initWindow(int pWindowWidth, int pWindowHeight) {
   // resizable) called when the window resizes
   // so the swapchain can be rebuilt
 }
+
+void WindowVLK::pollEvents() { glfwPollEvents(); }
+
+bool WindowVLK::windowShouldClose() {
+  return glfwWindowShouldClose(mWindowHandle);
+}
+
+GLFWwindow *WindowVLK::getWindowHandle() { return mWindowHandle; }

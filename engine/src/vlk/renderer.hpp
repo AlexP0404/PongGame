@@ -3,14 +3,20 @@
 
 #include <glm/glm.hpp>
 #include <iostream>
+#include <memory>
 
 #include "textureVLK.hpp"
+#include "vulkanInit.hpp"
+#include "vulkanRenderData.hpp"
+
+struct GLFWwindow;
 
 class Renderer {
 public:
-  Renderer();
+  Renderer(GLFWwindow *pWindowHandle, const std::string_view &pWindowTitle);
   ~Renderer();
   Renderer(Renderer &r) { std::cerr << "WARNING::Copying the renderer!\n"; }
+  void setFrameBufferResized(bool pFrameBufferResized = false);
 
   // Vulkan funcs/objs
 
@@ -25,6 +31,9 @@ public:
   void renderScreen();
 
 private:
+  std::shared_ptr<VulkanInit> mVLKInit;
+  VulkanRenderData mVLKData;
+  bool mFrameBufferResized;
 };
 
 #endif // !RENDERER_HPP

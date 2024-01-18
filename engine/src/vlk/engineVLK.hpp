@@ -41,8 +41,10 @@ public:
   std::shared_ptr<WindowVLK> PFN_GetWindowVLK();
 
 private:
-  std::shared_ptr<Renderer> mpRenderer;
-  std::shared_ptr<WindowVLK> mpWindow;
+  std::shared_ptr<Renderer>
+      mpRenderer; // render class that sets up vulkan and handles all internal
+                  // structures and has some basic drawing primitives
+  std::shared_ptr<WindowVLK> mpWindow; // simple glfw window class setup
 };
 
 #endif
