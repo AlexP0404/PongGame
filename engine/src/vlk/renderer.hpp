@@ -19,6 +19,7 @@ public:
   void setFrameBufferResized(bool pFrameBufferResized = false);
 
   // Vulkan funcs/objs
+  void devWaitIdle();
 
   // drawing funcs
   static void DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,

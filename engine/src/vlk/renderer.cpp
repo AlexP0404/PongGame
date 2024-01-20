@@ -16,6 +16,8 @@ void Renderer::setFrameBufferResized(bool pFrameBufferResized) {
   mFrameBufferResized = pFrameBufferResized;
 }
 
+void Renderer::devWaitIdle() { mVLKData.devWaitIdle(); }
+
 void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
                         const glm::vec4 &pColor) {}
 

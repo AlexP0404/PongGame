@@ -293,7 +293,6 @@ void GameLoop::loop() {
   // you have to press esc then enter once the game started to quit
   Timer delayBetweenRounds;
   while (!quit) {
-    quit = gameEngine.shouldQuit();
     while (m_GameTimer.ElapsedMillis() < GAME_LOOP_DELAY)
       ;
     m_GameTimer.Reset();
@@ -347,5 +346,11 @@ void GameLoop::loop() {
       gameEngine.drawDot(dot.getPosX(), dot.getPosY(), DOT_RADIUS);
     }
     gameEngine.renderScreen();
+    quit =
+        gameEngine.shouldQuit() || // should quit exits normally (calls all
+                                   // destructors) while inputting escape causes
+                                   // no engine destructors to be called
+        quit; // or with itself because user can press escape to quit as well
   }
+  gameEngine.shutdown();
 }

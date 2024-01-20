@@ -16,8 +16,12 @@ VulkanRenderData::VulkanRenderData() { mCurrentFrame = 0; }
 
 VulkanRenderData::~VulkanRenderData() {
   assert(mInit);
-  // TODO:: figure out where to put this line!!!
-  /* vkDeviceWaitIdle(mInit->mLogicalDevice); */
+  //
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    vkDestroySemaphore(mInit->mLogicalDevice, mImgAvailSemaphores[i], nullptr);
+    vkDestroySemaphore(mInit->mLogicalDevice, mRndrFinSemaphores[i], nullptr);
+    vkDestroyFence(mInit->mLogicalDevice, mInFlightFences[i], nullptr);
+  }
   vkDestroyCommandPool(mInit->mLogicalDevice, mCommandPool, nullptr);
 
   for (auto framebuffer : mFramebuffers) {
@@ -41,6 +45,10 @@ void VulkanRenderData::initRenderData(std::shared_ptr<VulkanInit> pInit) {
   createCommandPool();
   createCommandBuffers();
   createSyncObjects();
+}
+
+void VulkanRenderData::devWaitIdle() {
+  vkDeviceWaitIdle(mInit->mLogicalDevice);
 }
 
 void VulkanRenderData::initQueues() {
@@ -382,6 +390,7 @@ void VulkanRenderData::createCommandPool() {
 void VulkanRenderData::createCommandBuffers() {
   mCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
   VkCommandBufferAllocateInfo allocInfo{};
+  Utils::zeroInitializeStruct(allocInfo);
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   allocInfo.commandPool = mCommandPool;
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -397,6 +406,7 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
                                            uint32_t pImageIndex) {
   assert(mInit);
   VkCommandBufferBeginInfo beginInfo{};
+  Utils::zeroInitializeStruct(beginInfo);
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = 0;
   beginInfo.pInheritanceInfo = nullptr;
@@ -406,6 +416,7 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
   }
 
   VkRenderPassBeginInfo renderPassInfo{};
+  Utils::zeroInitializeStruct(renderPassInfo);
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
   renderPassInfo.renderPass = mRenderPass;
   renderPassInfo.framebuffer = mFramebuffers[pImageIndex];
@@ -437,6 +448,8 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
   scissor.extent = mInit->mSwapChainExtent;
   vkCmdSetScissor(pCommandBuffer, 0, 1, &scissor);
 
+  vkCmdDraw(pCommandBuffer, 3, 1, 0, 0);
+
   /* VkBuffer vertexBuffers[] = {vertexBuffer}; */
   /* VkDeviceSize offsets[] = {0}; */
   /* vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); */
@@ -465,9 +478,11 @@ void VulkanRenderData::createSyncObjects() {
   mInFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
   VkSemaphoreCreateInfo semaphoreInfo{};
+  Utils::zeroInitializeStruct(semaphoreInfo);
   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
   VkFenceCreateInfo fenceInfo{};
+  Utils::zeroInitializeStruct(fenceInfo);
   fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
@@ -504,6 +519,7 @@ void VulkanRenderData::drawFrame(bool pFrameBufferResized) {
   recordCommandBuffer(mCommandBuffers[mCurrentFrame], imageIndex);
 
   VkSubmitInfo submitInfo{};
+  Utils::zeroInitializeStruct(submitInfo);
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
   VkSemaphore waitSemaphores[] = {mImgAvailSemaphores[mCurrentFrame]};
@@ -524,6 +540,7 @@ void VulkanRenderData::drawFrame(bool pFrameBufferResized) {
     throw std::runtime_error("Failed to submit draw command buffer!");
 
   VkPresentInfoKHR presentInfo{};
+  Utils::zeroInitializeStruct(presentInfo);
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = signalSemaphores;

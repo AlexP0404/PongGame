@@ -22,9 +22,19 @@ bool EngineVLK::init() {
   return mpWindow != nullptr && mpRenderer != nullptr;
 }
 
+void EngineVLK::shutdown() {
+  mpRenderer->devWaitIdle(); // THIS HAS TO BE CALLED WHEN GAME ENDS
+}
+
 bool EngineVLK::loadMedia() { return true; }
 
-bool EngineVLK::shouldQuit() { return mpWindow->windowShouldClose(); }
+bool EngineVLK::shouldQuit() {
+  if (mpWindow->windowShouldClose()) {
+    mpRenderer->devWaitIdle();
+    return true;
+  }
+  return false;
+}
 
 bool EngineVLK::setTextureCoorCentered(const std::string &&textureName, int x,
                                        int y) {

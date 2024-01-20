@@ -15,6 +15,7 @@ public:
   ~EngineVLK() override;
 
   bool init() override;
+  void shutdown() override;
   bool loadMedia() override;
   bool shouldQuit() override;
   bool setTextureCoorCentered(const std::string &&textureName, int x,

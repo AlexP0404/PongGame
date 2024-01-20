@@ -13,6 +13,7 @@ public:
   ~VulkanRenderData();
   void initRenderData(std::shared_ptr<VulkanInit> pInit);
   void drawFrame(bool pFrameBufferResized);
+  void devWaitIdle();
   // these are used by the renderer class
   static void BeginBatch();
   static void EndBatch();

@@ -27,6 +27,7 @@ public:
   virtual ~Engine() = default;
 
   virtual bool init() = 0;
+  virtual void shutdown() = 0;
   virtual bool loadMedia() = 0;
   virtual bool shouldQuit() = 0;
 
