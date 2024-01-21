@@ -336,8 +336,11 @@ VkSurfaceFormatKHR VulkanInit::chooseSwapSurfaceFormat(
 VkPresentModeKHR VulkanInit::chooseSwapPresentMode(
     const std::vector<VkPresentModeKHR> &availablePresentModes) {
   for (const auto &pMode : availablePresentModes) {
-    if (pMode == VK_PRESENT_MODE_MAILBOX_KHR) // uncapped fps with less tearing
+    if (pMode ==
+        VK_PRESENT_MODE_MAILBOX_KHR) { // uncapped fps with less tearing
+      /* std::cout << "USING PRESENT MODE MAILBOX\n"; */
       return pMode;
+    }
   }
   return VK_PRESENT_MODE_FIFO_KHR; // similar to VSYNC
 }

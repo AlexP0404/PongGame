@@ -1,5 +1,6 @@
 #include "engineVLK.hpp"
 #include "renderer.hpp"
+#include <memory>
 
 // allows things like the input class to access the current application instance
 // while avoiding creating a whole new engine object
@@ -15,10 +16,9 @@ EngineVLK::~EngineVLK() {
 }
 
 bool EngineVLK::init() {
-  mpWindow = std::unique_ptr<WindowVLK>(
+  mpWindow = std::shared_ptr<WindowVLK>(
       new WindowVLK(m_ScreenWidth, m_ScreenHeight, m_GameTitle));
-  mpRenderer = std::unique_ptr<Renderer>(
-      new Renderer(mpWindow->getWindowHandle(), m_GameTitle));
+  mpRenderer = std::shared_ptr<Renderer>(new Renderer(mpWindow, m_GameTitle));
   return mpWindow != nullptr && mpRenderer != nullptr;
 }
 
@@ -87,7 +87,11 @@ void EngineVLK::drawNet() {}
 
 void EngineVLK::drawDot(int dotX, int dotY, int dotRadius) {}
 
-void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {}
+void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
+  mpRenderer->DrawQuad({p1X, p1Y}, {100, 100}, {1.0f, 1.0f, 1.0f, 1.0f});
+  mpRenderer->DrawQuad({p2X, p2Y}, {100, 100}, {1.0f, 1.0f, 1.0f, 1.0f});
+  mpRenderer->Flush();
+}
 
 void EngineVLK::playBounce() {}
 

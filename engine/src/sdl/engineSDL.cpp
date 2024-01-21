@@ -83,6 +83,8 @@ bool EngineSDL::init() {
   return success;
 }
 
+void EngineSDL::shutdown() {}
+
 bool EngineSDL::loadMedia() {
   gameIcon = IMG_Load("res/dot.bmp");
   SDL_SetWindowIcon(gameWindow, gameIcon);
@@ -181,7 +183,10 @@ void EngineSDL::renderTextures() {
 
 void EngineSDL::renderScreen() { SDL_RenderPresent(gameRenderer); }
 
-void EngineSDL::clearScreen() { SDL_RenderClear(gameRenderer); }
+void EngineSDL::clearScreen() {
+  /* SDL_SetRenderDrawColor(gameRenderer, 0, 0, 0, 0xFF); */
+  SDL_RenderClear(gameRenderer);
+}
 
 void EngineSDL::eraseTextures(const vector<string> &&texturesToErase) {
   for (auto &textureName : texturesToErase) {

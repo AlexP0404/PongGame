@@ -20,6 +20,7 @@ public: // funcs
 public: // objects
   VkInstance mInstance;
   VkSurfaceKHR mSurface;
+  VkPhysicalDevice mPhysicalDevice = VK_NULL_HANDLE;
   VkDevice mLogicalDevice;
   VkSwapchainKHR mSwapChain;
   VkFormat mSwapChainImageFormat;
@@ -81,7 +82,6 @@ private: // objects
   GLFWwindow *mWindowHandle;
   std::string_view mWindowTitle;
 
-  VkPhysicalDevice mPhysicalDevice = VK_NULL_HANDLE;
   std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
   VkDebugUtilsMessengerEXT debugMessenger;
 };

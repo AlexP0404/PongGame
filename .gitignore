@@ -10,3 +10,4 @@ compile_commands.json
 pong/out/Debug
 out/Debug
 .cmake/api/v1/reply
+out/Release

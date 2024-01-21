@@ -26,6 +26,7 @@ public:
   ~EngineSDL() override;
 
   bool init() override;
+  void shutdown() override;
   bool loadMedia() override;
   bool shouldQuit() override;
 

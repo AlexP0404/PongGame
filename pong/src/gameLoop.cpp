@@ -227,9 +227,12 @@ void GameLoop::handleInputs() {
     }
 
     if (input.IsKeyDown(KeyCode::Enter)) { // enter key to start
+#ifndef NDEBUG
+      std::cout << "STARTING GAME\n";
+#endif
       gameEngine.eraseTextures(
           {"modeSelectPrompt", "difficultyPrompt"}); // countdown starts
-      countDown();
+      /* countDown(); */
       gameEngine.eraseTexture("mainTextTexture");
       start = true;
       if (singlePlayer) {
@@ -291,7 +294,6 @@ void GameLoop::loop() {
   lastPressedEsc = false;
 
   // you have to press esc then enter once the game started to quit
-  Timer delayBetweenRounds;
   while (!quit) {
     while (m_GameTimer.ElapsedMillis() < GAME_LOOP_DELAY)
       ;
@@ -315,11 +317,9 @@ void GameLoop::loop() {
                          // and paddles and checks for a collision
         dot.bounce(bounceOffPaddle);
         gameEngine.playBounce();
-        if (!bounceOffPaddle) {
+        if (singlePlayer && !bounceOffPaddle) { // this was causing SIGSEV
           ai1.setDotBounceX(dot.getDirectionX(), dot.getPosX(),
-                            dot.getPosY() <
-                                SCREEN_HEIGHT /
-                                    2); // if bounce off the top, dot Y pos = 0
+                            dot.getPosY() < SCREEN_HEIGHT / 2);
           ai2.setDotBounceX(dot.getDirectionX(), dot.getPosX(),
                             dot.getPosY() < SCREEN_HEIGHT / 2);
         }
@@ -339,18 +339,20 @@ void GameLoop::loop() {
           p1Wins = true;
         }
         dot.set();
+
+#ifndef NDEBUG // if in debug mode
+        std::cout << sb.getScoreString() << '\n';
+#endif
       }
       gameEngine.drawNet();
       gameEngine.drawPaddles(p1.getPosX(), p1.getPosY(), p2.getPosX(),
                              p2.getPosY());
       gameEngine.drawDot(dot.getPosX(), dot.getPosY(), DOT_RADIUS);
     }
+    /* gameEngine.clearScreen(); */
     gameEngine.renderScreen();
-    quit =
-        gameEngine.shouldQuit() || // should quit exits normally (calls all
-                                   // destructors) while inputting escape causes
-                                   // no engine destructors to be called
-        quit; // or with itself because user can press escape to quit as well
+    quit = gameEngine.shouldQuit() ||
+           quit; // or with itself because user can press escape to quit as well
   }
   gameEngine.shutdown();
 }

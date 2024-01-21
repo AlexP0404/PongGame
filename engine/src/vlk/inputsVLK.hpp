@@ -2,7 +2,8 @@
 #define INPUTS_VLK_HPP
 
 #include "keyCodes.hpp"
-#include <GLFW/glfw3.h>
+
+struct GLFWwindow;
 
 class inputVLK {
   GLFWwindow *windowHandle = nullptr;
