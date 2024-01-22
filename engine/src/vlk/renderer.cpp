@@ -16,6 +16,7 @@ Renderer::Renderer(std::shared_ptr<WindowVLK> pWindow,
 
   mVLKData.initRenderData(mVLKInit);
   mFrameBufferResized = false;
+  mNumVerticesToDraw = 0;
 }
 // this may not work if the device is already destroyed. it shouldnt tho?
 Renderer::~Renderer() {}
@@ -62,9 +63,14 @@ std::array<Vertex, 4> Renderer::CreateQuad(const glm::vec2 &pPosition,
 void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
                         const glm::vec4 &pColor) {
   /* DrawQuad({pPosition.x, pPosition.y, 0.0f}, pSize, pColor); */
+  if (mNumVerticesToDraw >= mVLKData.MAX_VERTEX_COUNT - 4) {
+    Flush();
+    BeginBatch();
+  }
   auto quad =
       CreateQuad(convertPosition(pPosition), convertSize(pSize), pColor);
-  mVertices.insert(mVertices.end(), quad.begin(), quad.end());
+  mVLKData.mVertices.insert(mVLKData.mVertices.end(), quad.begin(), quad.end());
+  mNumVerticesToDraw += 4;
   // add quad vertices to the vertices vector
 }
 
@@ -81,7 +87,8 @@ void Renderer::DrawQuad(const glm::mat4 &pTransform, const glm::vec4 &pColor) {
     Vertex v;
     v.pos = pTransform * QUAD_VERTEX_POS[i];
     v.color = pColor;
-    mVertices.push_back(v);
+    mVLKData.mVertices.push_back(v);
+    mNumVerticesToDraw++;
   }
 }
 
@@ -92,11 +99,12 @@ void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
 void Renderer::renderScreen() {
   Flush();
   mVLKData.drawFrame(mFrameBufferResized); // should only need to resize once
+  BeginBatch();
 }
 
-void Renderer::Flush() {
-  mVLKData.drawIndexed(mVertices);
-  mVertices.clear();
-}
+void Renderer::Flush() { mVLKData.drawIndexed(mNumVerticesToDraw); }
 
-void Renderer::BeginBatch() { mVertices.clear(); }
+void Renderer::BeginBatch() {
+  mVLKData.mVertices.clear();
+  mNumVerticesToDraw = 0;
+}

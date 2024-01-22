@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <memory>
-#include <vector>
 
 #include "textureVLK.hpp"
 #include "vertex.hpp"
@@ -54,7 +53,8 @@ private:
   static std::array<Vertex, 4> CreateQuad(const glm::vec2 &pPosition,
                                           const glm::vec2 &pSize,
                                           const glm::vec4 &pColor);
-  std::vector<Vertex> mVertices;
+
+  uint32_t mNumVerticesToDraw;
   const glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
                                         {0.5f, -0.5f, 0.0f, 1.0f},
                                         {0.5f, 0.5f, 0.0f, 1.0f},

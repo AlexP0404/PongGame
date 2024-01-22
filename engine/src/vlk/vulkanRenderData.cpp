@@ -1,22 +1,13 @@
 #include "vulkanRenderData.hpp"
 
+#include "ubo.hpp"
 #include "utils.hpp"
 
 #include <cassert>
 #include <cstdint>
 #include <fstream>
-#include <stdexcept>
 #include <vector>
-#include <vulkan/vulkan_core.h>
 
-/* const std::vector<Vertex> verticies = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
- */
-/*                                        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
- */
-/*                                        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}, */
-/*                                        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
- */
-/**/
 VulkanRenderData::VulkanRenderData() {
   mCurrentFrame = 0;
   mNumIndiciesToDraw = 0;
@@ -25,6 +16,12 @@ VulkanRenderData::VulkanRenderData() {
 VulkanRenderData::~VulkanRenderData() {
   assert(mInit);
   //
+  //
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    vkDestroyBuffer(mInit->mLogicalDevice, mUniformBuffers[i], nullptr);
+    vkFreeMemory(mInit->mLogicalDevice, mUniformBuffersMemory[i], nullptr);
+  }
+  vkDestroyDescriptorSetLayout(mInit->mLogicalDevice, mDescSetLayout, nullptr);
   vkDestroyBuffer(mInit->mLogicalDevice, mIndexBuffer, nullptr);
   vkFreeMemory(mInit->mLogicalDevice, mIndexBuferMem, nullptr);
   vkDestroyBuffer(mInit->mLogicalDevice, mVertexBuffer, nullptr);
@@ -40,7 +37,7 @@ VulkanRenderData::~VulkanRenderData() {
   for (auto framebuffer : mFramebuffers) {
     vkDestroyFramebuffer(mInit->mLogicalDevice, framebuffer, nullptr);
   }
-  vkDestroyPipeline(mInit->mLogicalDevice, mGraphicsPipeline, nullptr);
+  vkDestroyPipeline(mInit->mLogicalDevice, mQuadGraphicsPipeline, nullptr);
   vkDestroyPipelineLayout(mInit->mLogicalDevice, mPipelineLayout, nullptr);
   vkDestroyRenderPass(mInit->mLogicalDevice, mRenderPass, nullptr);
   for (auto imageView : mSwapChainImageViews)
@@ -53,11 +50,13 @@ void VulkanRenderData::initRenderData(std::shared_ptr<VulkanInit> pInit) {
   getSwapChainImages();
   createImageViews();
   createRenderPass();
+  createDescriptorSetLayout();
   createGraphicsPipeline();
   createFramebuffers();
   createCommandPool();
   createVertexBuffer();
   createIndexBuffer();
+  createUniformBuffers();
   createCommandBuffers();
   createSyncObjects();
 }
@@ -150,6 +149,26 @@ void VulkanRenderData::createRenderPass() {
                          &mRenderPass) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create render pass!");
   }
+}
+
+void VulkanRenderData::createDescriptorSetLayout() {
+  assert(mInit);
+  VkDescriptorSetLayoutBinding uboLayoutBinding{};
+  Utils::zeroInitializeStruct(uboLayoutBinding);
+  uboLayoutBinding.binding = 0;
+  uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  uboLayoutBinding.descriptorCount = 1;
+  uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  uboLayoutBinding.pImmutableSamplers = nullptr;
+
+  VkDescriptorSetLayoutCreateInfo layoutInfo{};
+  Utils::zeroInitializeStruct(layoutInfo);
+  layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  layoutInfo.bindingCount = 1;
+  layoutInfo.pBindings = &uboLayoutBinding;
+
+  VK_CHECK(vkCreateDescriptorSetLayout(mInit->mLogicalDevice, &layoutInfo,
+                                       nullptr, &mDescSetLayout));
 }
 
 void VulkanRenderData::createGraphicsPipeline() {
@@ -293,8 +312,8 @@ void VulkanRenderData::createGraphicsPipeline() {
   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
   Utils::zeroInitializeStruct(pipelineLayoutInfo);
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.setLayoutCount = 0;
-  pipelineLayoutInfo.pSetLayouts = nullptr;
+  pipelineLayoutInfo.setLayoutCount = 1;
+  pipelineLayoutInfo.pSetLayouts = &mDescSetLayout;
   pipelineLayoutInfo.pushConstantRangeCount = 0;
   pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -324,7 +343,7 @@ void VulkanRenderData::createGraphicsPipeline() {
 
   if (vkCreateGraphicsPipelines(mInit->mLogicalDevice, VK_NULL_HANDLE, 1,
                                 &pipelineInfo, nullptr,
-                                &mGraphicsPipeline) != VK_SUCCESS)
+                                &mQuadGraphicsPipeline) != VK_SUCCESS)
     throw std::runtime_error("Failed to create graphics pipeline!");
 
   vkDestroyShaderModule(mInit->mLogicalDevice, vShaderModule, nullptr);
@@ -480,8 +499,8 @@ void VulkanRenderData::copyBuffer(VkBuffer pSrcBuffer, VkBuffer pDstBuffer,
 }
 
 void VulkanRenderData::createVertexBuffer() {
-  mVerticies.resize(MAX_VERTEX_COUNT);
-  VkDeviceSize bufferSize = sizeof(mVerticies[0]) * mVerticies.size();
+  mVertices.resize(MAX_VERTEX_COUNT);
+  VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertices.size();
 
   VkBuffer stagingBuffer;
   VkDeviceMemory stagingBuffMem;
@@ -492,8 +511,9 @@ void VulkanRenderData::createVertexBuffer() {
                stagingBuffer, stagingBuffMem);
 
   void *data;
+  void *vertexData;
   vkMapMemory(mInit->mLogicalDevice, stagingBuffMem, 0, bufferSize, 0, &data);
-  memcpy(data, mVerticies.data(), (size_t)bufferSize);
+  memcpy(data, mVertices.data(), (size_t)bufferSize);
   vkUnmapMemory(mInit->mLogicalDevice, stagingBuffMem);
 
   createBuffer(
@@ -565,6 +585,24 @@ void VulkanRenderData::createIndexBuffer() {
   vkFreeMemory(mInit->mLogicalDevice, stagingBuffMem, nullptr);
 }
 
+void VulkanRenderData::createUniformBuffers() {
+  assert(mInit);
+  VkDeviceSize bufferSize = sizeof(UBO);
+
+  mUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+  mUniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
+  mUniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 mUniformBuffers[i], mUniformBuffersMemory[i]);
+    vkMapMemory(mInit->mLogicalDevice, mUniformBuffersMemory[i], 0, bufferSize,
+                0, &mUniformBuffersMapped[i]);
+  }
+}
+
 void VulkanRenderData::createCommandBuffers() {
   mCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
   VkCommandBufferAllocateInfo allocInfo{};
@@ -609,7 +647,7 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
                        VK_SUBPASS_CONTENTS_INLINE);
 
   vkCmdBindPipeline(pCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    mGraphicsPipeline);
+                    mQuadGraphicsPipeline);
 
   VkViewport viewport{};
   viewport.x = 0.0f;
@@ -640,8 +678,6 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
   vkCmdDrawIndexed(pCommandBuffer, static_cast<uint32_t>(mIndices.size()), 1, 0,
                    0, 0);
 
-  /* vkCmdDraw(pCommandBuffer, static_cast<uint32_t>(verticies.size()), 1, 0,
-   * 0); */
   vkCmdEndRenderPass(pCommandBuffer);
 
   if (vkEndCommandBuffer(pCommandBuffer) != VK_SUCCESS)
@@ -693,6 +729,7 @@ void VulkanRenderData::drawFrame(bool pFrameBufferResized) {
   vkResetFences(mInit->mLogicalDevice, 1, &mInFlightFences[mCurrentFrame]);
   vkResetCommandBuffer(mCommandBuffers[mCurrentFrame], 0);
 
+  updateUniformBuffer(mCurrentFrame);
   recordCommandBuffer(mCommandBuffers[mCurrentFrame], imageIndex);
 
   VkSubmitInfo submitInfo{};
@@ -740,6 +777,11 @@ void VulkanRenderData::drawFrame(bool pFrameBufferResized) {
   mCurrentFrame = (mCurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // either 0 or 1
 }
 
+void VulkanRenderData::updateUniformBuffer(uint32_t pCurrentImage) {
+  // you can figure out which quad is chosen using the % operator
+  //
+}
+
 void VulkanRenderData::updateBuffers() {
   vkDeviceWaitIdle(mInit->mLogicalDevice); // this is terrible
 
@@ -755,11 +797,8 @@ void VulkanRenderData::updateBuffers() {
   createCommandBuffers();
 }
 
-void VulkanRenderData::drawIndexed(const std::vector<Vertex> &pVerticies) {
-  mVerticies.clear();
-  mVerticies = pVerticies;
-  mVerticies.resize(MAX_VERTEX_COUNT);
-  mNumIndiciesToDraw = pVerticies.size() / 4 * 6; // 6 indicies per quad
+void VulkanRenderData::drawIndexed(uint32_t pNumVerticesToDraw /*=0*/) {
+  mNumIndiciesToDraw = pNumVerticesToDraw / 4 * 6; // 6 indicies per quad
 
   updateBuffers();
 }

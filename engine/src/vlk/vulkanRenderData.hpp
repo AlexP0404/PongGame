@@ -6,7 +6,6 @@
 
 #include <glm/glm.hpp>
 
-#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -19,13 +18,14 @@ public:
   void devWaitIdle();
   // these are used by the renderer class
 
-  void drawIndexed(const std::vector<Vertex> &pVerticies);
+  void drawIndexed(uint32_t pNumVerticesToDraw = 0);
 
-public:
   const int MAX_FRAMES_IN_FLIGHT = 2;
   const int MAX_QUAD_COUNT = 100;
   const int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4;
   const int MAX_INDEX_COUNT = MAX_QUAD_COUNT * 6;
+  std::vector<Vertex> mVertices; // this will be the verticies to be graphed
+private:
   VkQueue mGraphicsQueue;
   VkQueue mPresentQueue;
 
@@ -34,8 +34,11 @@ public:
   std::vector<VkFramebuffer> mFramebuffers;
 
   VkRenderPass mRenderPass;
+
+  VkDescriptorSetLayout mDescSetLayout;
+
   VkPipelineLayout mPipelineLayout;
-  VkPipeline mGraphicsPipeline;
+  VkPipeline mQuadGraphicsPipeline;
 
   VkCommandPool mCommandPool;
   std::vector<VkCommandBuffer> mCommandBuffers;
@@ -44,8 +47,10 @@ public:
   VkDeviceMemory mVertexBufferMem;
   VkBuffer mIndexBuffer;
   VkDeviceMemory mIndexBuferMem;
-  std::vector<Vertex> mVerticies; // this will be the verticies to be graphed
   std::vector<uint16_t> mIndices;
+  std::vector<VkBuffer> mUniformBuffers;
+  std::vector<VkDeviceMemory> mUniformBuffersMemory;
+  std::vector<void *> mUniformBuffersMapped;
 
   std::vector<VkSemaphore> mImgAvailSemaphores;
   std::vector<VkSemaphore> mRndrFinSemaphores;
@@ -57,6 +62,7 @@ private:
   void createImageViews();
   void recreateSwapchain();
   void createRenderPass();
+  void createDescriptorSetLayout();
   void createGraphicsPipeline();
   void createFramebuffers();
   void createCommandPool();
@@ -66,6 +72,8 @@ private:
   void copyBuffer(VkBuffer pSrcBuffer, VkBuffer pDstBuffer, VkDeviceSize pSize);
   void createVertexBuffer();
   void createIndexBuffer();
+  void createUniformBuffers();
+  void updateUniformBuffer(uint32_t pCurrentImage);
   uint32_t findMemoryType(uint32_t pTypeFilter,
                           VkMemoryPropertyFlags pProperties);
   void createCommandBuffers();
