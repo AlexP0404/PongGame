@@ -22,6 +22,10 @@ public:
   void drawIndexed(const std::vector<Vertex> &pVerticies);
 
 public:
+  const int MAX_FRAMES_IN_FLIGHT = 2;
+  const int MAX_QUAD_COUNT = 100;
+  const int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4;
+  const int MAX_INDEX_COUNT = MAX_QUAD_COUNT * 6;
   VkQueue mGraphicsQueue;
   VkQueue mPresentQueue;
 

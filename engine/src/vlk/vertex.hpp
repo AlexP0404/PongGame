@@ -7,7 +7,7 @@
 #include <vulkan/vulkan.h>
 
 struct Vertex {
-  glm::vec3 pos;
+  glm::vec2 pos;
   glm::vec3 color;
 
   static VkVertexInputBindingDescription getBindingDescription() {
@@ -23,7 +23,7 @@ struct Vertex {
     std::array<VkVertexInputAttributeDescription, 2> attributeDesc{};
     attributeDesc[0].binding = 0;
     attributeDesc[0].location = 0;
-    attributeDesc[0].format = VK_FORMAT_R32G32B32_SFLOAT; // vec3
+    attributeDesc[0].format = VK_FORMAT_R32G32_SFLOAT; // vec2
     attributeDesc[0].offset = offsetof(Vertex, pos);
 
     attributeDesc[1].binding = 0;

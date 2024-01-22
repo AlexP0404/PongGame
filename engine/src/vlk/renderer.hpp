@@ -49,6 +49,11 @@ private:
   VulkanRenderData mVLKData;
   bool mFrameBufferResized;
 
+  static const glm::vec2 convertPosition(const glm::vec2 &pPosition);
+  static const glm::vec2 convertSize(const glm::vec2 &pSize);
+  static std::array<Vertex, 4> CreateQuad(const glm::vec2 &pPosition,
+                                          const glm::vec2 &pSize,
+                                          const glm::vec4 &pColor);
   std::vector<Vertex> mVertices;
   const glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
                                         {0.5f, -0.5f, 0.0f, 1.0f},

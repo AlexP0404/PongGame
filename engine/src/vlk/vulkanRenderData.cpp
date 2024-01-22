@@ -9,11 +9,6 @@
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
-const int MAX_QUAD_COUNT = 100;
-const int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4;
-const int MAX_INDEX_COUNT = MAX_QUAD_COUNT * 6;
-
 /* const std::vector<Vertex> verticies = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
  */
 /*                                        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},

@@ -88,9 +88,15 @@ void EngineVLK::drawNet() {}
 void EngineVLK::drawDot(int dotX, int dotY, int dotRadius) {}
 
 void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
-  mpRenderer->DrawQuad({p1X, p1Y}, {100, 100}, {1.0f, 1.0f, 1.0f, 1.0f});
-  mpRenderer->DrawQuad({p2X, p2Y}, {100, 100}, {1.0f, 1.0f, 1.0f, 1.0f});
-  mpRenderer->Flush();
+  // need to format the position and size based on (0,0) being the center of the
+  // screen and (1,1) being bottom right etc
+  //
+
+  mpRenderer->DrawQuad({p1X, p1Y}, {m_PaddleWidth, m_PaddleHeight},
+                       {1.0f, 1.0f, 1.0f, 1.0f});
+  mpRenderer->DrawQuad({p2X, p2Y}, {m_PaddleWidth, m_PaddleHeight},
+                       {1.0f, 1.0f, 1.0f, 1.0f});
+  /* mpRenderer->Flush(); */
 }
 
 void EngineVLK::playBounce() {}
