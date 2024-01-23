@@ -252,6 +252,7 @@ void GameLoop::handleInputs() {
       if (lastPressedEsc) {
         return;
       }
+      gameEngine.clearScreen();
       lastPressedEsc = true;
       mainText = "Are You Sure You Want To Quit?";
       setStartText();

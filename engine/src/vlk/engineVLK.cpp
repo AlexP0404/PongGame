@@ -78,7 +78,7 @@ void EngineVLK::renderScreen() {
   mNumEntities = 0;
 }
 
-void EngineVLK::clearScreen() {}
+void EngineVLK::clearScreen() { mpRenderer->BeginBatch(); }
 
 void EngineVLK::eraseTextures(
     const std::vector<std::string> &&texturesToErase) {}
@@ -87,7 +87,10 @@ void EngineVLK::eraseTexture(const std::string &&textureName) {}
 
 void EngineVLK::drawNet() {}
 
-void EngineVLK::drawDot(int dotX, int dotY, int dotRadius) {}
+void EngineVLK::drawDot(int dotX, int dotY, int dotRadius) {
+  mpRenderer->DrawQuad({dotX, dotY}, {dotRadius, dotRadius}, glm::vec3(1.0f),
+                       mNumEntities++);
+}
 
 void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
   // need to format the position and size based on (0,0) being the center of the

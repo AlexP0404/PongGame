@@ -41,6 +41,7 @@ public:
                 const glm::vec4 pTintColor = glm::vec4(1.0f));
 
   void Flush();
+  void BeginBatch();
 
 private:
   std::shared_ptr<VulkanInit> mVLKInit;
@@ -61,7 +62,6 @@ private:
                                         {0.5f, 0.5f, 0.0f, 1.0f},
                                         {-0.5f, 0.5f, 0.0f, 1.0f}};
 
-  void BeginBatch();
   void EndBatch();
 };
 
