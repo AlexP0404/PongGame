@@ -4,6 +4,7 @@
 // deals with allocating/deallocating textures
 // runs the game loop and calls the other classes
 #include <string>
+#include <thread>
 
 #ifndef ENGINE_USE_VLK
 #include "engineSDL.hpp"
@@ -31,7 +32,7 @@ const int PADDLE_WIDTH = 20;
 const int PADDLE_HEIGHT = 100;
 const int PADDLE_OFFSET = 100;
 const float COLLISION_CHECK_DELAY = 100.0f;
-const float GAME_LOOP_DELAY = 10.0f;
+const float GAME_LOOP_DELAY = 1.0f;
 
 class GameLoop {
 public:
@@ -56,6 +57,7 @@ private:
 private:
   selectedEngine gameEngine;
   Input input;
+  std::thread m_InputsThread;
 
   Dot dot;
   Scoreboard sb;
