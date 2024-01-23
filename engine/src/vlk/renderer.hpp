@@ -28,12 +28,12 @@ public:
 
   // drawing funcs
   void DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
-                const glm::vec4 &pColor, const uint32_t pQuadID);
+                const glm::vec3 &pColor, const uint32_t pQuadID);
 
   void DrawQuad(const glm::vec3 &pPosition, const glm::vec2 &pSize,
-                const glm::vec4 &pColor);
+                const glm::vec3 &pColor);
 
-  void DrawQuad(const glm::mat4 &pTransform, const glm::vec4 &pColor);
+  void DrawQuad(const glm::mat4 &pTransform, const glm::vec3 &pColor);
 
   // texture drawing
   void DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
@@ -52,7 +52,7 @@ private:
   static const glm::vec2 convertSize(const glm::vec2 &pSize);
   static std::array<Vertex, 4> CreateQuad(const glm::vec2 &pPosition,
                                           const glm::vec2 &pSize,
-                                          const glm::vec4 &pColor,
+                                          const glm::vec3 &pColor,
                                           const uint32_t pQuadID);
 
   uint32_t mNumQuadsDrawn;

@@ -40,7 +40,7 @@ const glm::vec2 Renderer::convertSize(const glm::vec2 &pSize) {
 
 std::array<Vertex, 4> Renderer::CreateQuad(const glm::vec2 &pPosition,
                                            const glm::vec2 &pSize,
-                                           const glm::vec4 &pColor,
+                                           const glm::vec3 &pColor,
                                            const uint32_t pQuadID) {
   Vertex v0;
   v0.pos = pPosition;
@@ -66,11 +66,11 @@ std::array<Vertex, 4> Renderer::CreateQuad(const glm::vec2 &pPosition,
 }
 
 void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
-                        const glm::vec4 &pColor, const uint32_t pQuadID) {
+                        const glm::vec3 &pColor, const uint32_t pQuadID) {
   /* DrawQuad({pPosition.x, pPosition.y, 0.0f}, pSize, pColor); */
   // if quad already exists, don't draw a new one, but update ubo position
-  if (mVLKData.mVertices.at(pQuadID * 4).color != glm::vec3{0.0f}) {
-    mVLKData.updateEntityPos(pQuadID, pPosition);
+  if (mVLKData.mVertices.at(pQuadID * 4).color == pColor) {
+    mVLKData.updateEntityPos(pQuadID, convertPosition(pPosition));
     return;
   }
 
@@ -90,13 +90,13 @@ void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
 }
 
 void Renderer::DrawQuad(const glm::vec3 &pPosition, const glm::vec2 &pSize,
-                        const glm::vec4 &pColor) {
+                        const glm::vec3 &pColor) {
   glm::mat4 transform = glm::translate(glm::mat4(1.0f), pPosition) *
                         glm::scale(glm::mat4(1.0f), {pSize.x, pSize.y, 1.0f});
   DrawQuad(transform, pColor);
 }
 
-void Renderer::DrawQuad(const glm::mat4 &pTransform, const glm::vec4 &pColor) {
+void Renderer::DrawQuad(const glm::mat4 &pTransform, const glm::vec3 &pColor) {
   constexpr size_t quadVertexCount = 4;
   for (size_t i = 0; i < quadVertexCount; i++) {
     Vertex v;
@@ -114,7 +114,7 @@ void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
 void Renderer::renderScreen() {
   Flush();
   mVLKData.drawFrame(mFrameBufferResized); // should only need to resize once
-  BeginBatch();
+  /* BeginBatch(); */
 }
 
 void Renderer::Flush() { mVLKData.drawIndexed(mNumQuadsDrawn); }
@@ -122,4 +122,5 @@ void Renderer::Flush() { mVLKData.drawIndexed(mNumQuadsDrawn); }
 void Renderer::BeginBatch() {
   mVLKData.mVertices.clear();
   mNumQuadsDrawn = 0;
+  mVLKData.mVertices.resize(mVLKData.MAX_VERTEX_COUNT);
 }

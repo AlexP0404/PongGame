@@ -98,9 +98,9 @@ void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
   // loop as long as the loop doesn't change (may refactor later to be more
   // map-esque)
   mpRenderer->DrawQuad({p1X, p1Y}, {m_PaddleWidth, m_PaddleHeight},
-                       {1.0f, 1.0f, 1.0f, 1.0f}, mNumEntities++);
+                       {1.0f, 1.0f, 1.0f}, mNumEntities++);
   mpRenderer->DrawQuad({p2X, p2Y}, {m_PaddleWidth, m_PaddleHeight},
-                       {1.0f, 1.0f, 1.0f, 1.0f}, mNumEntities++);
+                       {1.0f, 1.0f, 1.0f}, mNumEntities++);
   /* mpRenderer->Flush(); */
 }
 

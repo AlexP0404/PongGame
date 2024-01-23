@@ -1,11 +1,11 @@
 #include "vulkanRenderData.hpp"
 
-#include "ubo.hpp"
 #include "utils.hpp"
 
 #include <cassert>
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
@@ -596,7 +596,6 @@ void VulkanRenderData::createUniformBuffers() {
   mUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
   mUniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
   mUniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-  mUBOdata.resize(MAX_VERTEX_COUNT); // one ubo per vertex
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -638,6 +637,27 @@ void VulkanRenderData::createDescriptorSets() {
   mDescSets.resize(MAX_FRAMES_IN_FLIGHT);
   VK_CHECK(vkAllocateDescriptorSets(mInit->mLogicalDevice, &allocInfo,
                                     mDescSets.data()));
+
+  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+    VkDescriptorBufferInfo bufferInfo{};
+    Utils::zeroInitializeStruct(bufferInfo);
+    bufferInfo.buffer = mUniformBuffers[i];
+    bufferInfo.offset = 0;
+    bufferInfo.range = sizeof(UBO);
+
+    VkWriteDescriptorSet descWrite{};
+    Utils::zeroInitializeStruct(descWrite);
+    descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descWrite.dstSet = mDescSets[i];
+    descWrite.dstBinding = 0;
+    descWrite.dstArrayElement = 0;
+    descWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descWrite.descriptorCount = 1;
+    descWrite.pBufferInfo = &bufferInfo;
+    descWrite.pImageInfo = nullptr;
+    descWrite.pTexelBufferView = nullptr;
+    vkUpdateDescriptorSets(mInit->mLogicalDevice, 1, &descWrite, 0, nullptr);
+  }
 }
 
 void VulkanRenderData::createCommandBuffers() {
@@ -707,10 +727,9 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
 
   vkCmdBindIndexBuffer(pCommandBuffer, mIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-  /* vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, */
-  /*                         pipelineLayout, 0, 1,
-   * &descriptorSets[currentFrame], */
-  /*                         0, nullptr); */
+  vkCmdBindDescriptorSets(pCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          mPipelineLayout, 0, 1, &mDescSets[mCurrentFrame], 0,
+                          nullptr);
 
   vkCmdDrawIndexed(pCommandBuffer, static_cast<uint32_t>(mIndices.size()), 1, 0,
                    0, 0);
@@ -819,19 +838,19 @@ void VulkanRenderData::updateEntityPos(uint32_t pEntityID,
   // this needs to take the difference between the current vertex/quad position
   // and the one saved in the vertex array, and store that value in the mUBOdata
   // buffer
-  glm::vec2 posDiff =
-      mVertices[pEntityID * 4].pos - pCurrentPos; // this may be backwards
-  mUBOdata[pEntityID] = posDiff;
+  glm::vec4 posDiff = {pCurrentPos.x - mVertices[pEntityID * 4].pos.x,
+                       pCurrentPos.y - mVertices[pEntityID * 4].pos.y,
+                       glm::vec2(0.0f)}; // this may be backwards
+  mUbo.movedPos[pEntityID] = posDiff;
 }
 
 void VulkanRenderData::updateUniformBuffer(uint32_t pCurrentImage) {
-  // you can figure out which quad is chosen using the % operator
-  //
-  UBO ubo{};
   // copy individual positions to the uniform buffer buffer
-  memcpy(ubo.movedPos, mUBOdata.data(), sizeof(ubo));
   // copy the entier ubo to the GPU
-  memcpy(mUniformBuffersMapped[pCurrentImage], &ubo, sizeof(ubo));
+  UBO stagedUBO = mUbo;
+  // have to stage it because mUbo is being written to on a different thread
+  // potentially while vulkan would want to be reading to it
+  memcpy(mUniformBuffersMapped[pCurrentImage], &stagedUBO, sizeof(UBO));
 }
 
 void VulkanRenderData::initNewEntity() {

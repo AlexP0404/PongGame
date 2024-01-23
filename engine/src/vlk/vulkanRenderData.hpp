@@ -1,6 +1,7 @@
 #ifndef VULKAN_RENDER_DATA_HPP
 #define VULKAN_RENDER_DATA_HPP
 
+#include "ubo.hpp"
 #include "vertex.hpp"
 #include "vulkanInit.hpp"
 
@@ -27,7 +28,6 @@ public:
   const int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4;
   const int MAX_INDEX_COUNT = MAX_QUAD_COUNT * 6;
   std::vector<Vertex> mVertices; // this will be the verticies to be graphed
-  std::vector<glm::vec2> mUBOdata;
 
 private:
   VkQueue mGraphicsQueue;
@@ -57,6 +57,7 @@ private:
   std::vector<VkBuffer> mUniformBuffers;
   std::vector<VkDeviceMemory> mUniformBuffersMemory;
   std::vector<void *> mUniformBuffersMapped;
+  UBO mUbo;
 
   std::vector<VkSemaphore> mImgAvailSemaphores;
   std::vector<VkSemaphore> mRndrFinSemaphores;
