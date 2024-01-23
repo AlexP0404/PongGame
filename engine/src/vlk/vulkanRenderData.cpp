@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <fstream>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 VulkanRenderData::VulkanRenderData() {
   mCurrentFrame = 0;
@@ -21,6 +22,7 @@ VulkanRenderData::~VulkanRenderData() {
     vkDestroyBuffer(mInit->mLogicalDevice, mUniformBuffers[i], nullptr);
     vkFreeMemory(mInit->mLogicalDevice, mUniformBuffersMemory[i], nullptr);
   }
+  vkDestroyDescriptorPool(mInit->mLogicalDevice, mDescPool, nullptr);
   vkDestroyDescriptorSetLayout(mInit->mLogicalDevice, mDescSetLayout, nullptr);
   vkDestroyBuffer(mInit->mLogicalDevice, mIndexBuffer, nullptr);
   vkFreeMemory(mInit->mLogicalDevice, mIndexBuferMem, nullptr);
@@ -57,6 +59,8 @@ void VulkanRenderData::initRenderData(std::shared_ptr<VulkanInit> pInit) {
   createVertexBuffer();
   createIndexBuffer();
   createUniformBuffers();
+  createDescriptorPool();
+  createDescriptorSets();
   createCommandBuffers();
   createSyncObjects();
 }
@@ -592,6 +596,7 @@ void VulkanRenderData::createUniformBuffers() {
   mUniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
   mUniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
   mUniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+  mUBOdata.resize(MAX_VERTEX_COUNT); // one ubo per vertex
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
@@ -601,6 +606,38 @@ void VulkanRenderData::createUniformBuffers() {
     vkMapMemory(mInit->mLogicalDevice, mUniformBuffersMemory[i], 0, bufferSize,
                 0, &mUniformBuffersMapped[i]);
   }
+}
+
+void VulkanRenderData::createDescriptorPool() {
+  VkDescriptorPoolSize poolSize{};
+  Utils::zeroInitializeStruct(poolSize);
+  poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+  VkDescriptorPoolCreateInfo poolInfo{};
+  Utils::zeroInitializeStruct(poolInfo);
+  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  poolInfo.poolSizeCount = 1;
+  poolInfo.pPoolSizes = &poolSize;
+  poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+  VK_CHECK(vkCreateDescriptorPool(mInit->mLogicalDevice, &poolInfo, nullptr,
+                                  &mDescPool));
+}
+
+void VulkanRenderData::createDescriptorSets() {
+  std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT,
+                                             mDescSetLayout);
+  VkDescriptorSetAllocateInfo allocInfo{};
+  Utils::zeroInitializeStruct(allocInfo);
+  allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  allocInfo.descriptorPool = mDescPool;
+  allocInfo.descriptorSetCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+  allocInfo.pSetLayouts = layouts.data();
+
+  mDescSets.resize(MAX_FRAMES_IN_FLIGHT);
+  VK_CHECK(vkAllocateDescriptorSets(mInit->mLogicalDevice, &allocInfo,
+                                    mDescSets.data()));
 }
 
 void VulkanRenderData::createCommandBuffers() {
@@ -777,12 +814,27 @@ void VulkanRenderData::drawFrame(bool pFrameBufferResized) {
   mCurrentFrame = (mCurrentFrame + 1) % MAX_FRAMES_IN_FLIGHT; // either 0 or 1
 }
 
+void VulkanRenderData::updateEntityPos(uint32_t pEntityID,
+                                       glm::vec2 pCurrentPos) {
+  // this needs to take the difference between the current vertex/quad position
+  // and the one saved in the vertex array, and store that value in the mUBOdata
+  // buffer
+  glm::vec2 posDiff =
+      mVertices[pEntityID * 4].pos - pCurrentPos; // this may be backwards
+  mUBOdata[pEntityID] = posDiff;
+}
+
 void VulkanRenderData::updateUniformBuffer(uint32_t pCurrentImage) {
   // you can figure out which quad is chosen using the % operator
   //
+  UBO ubo{};
+  // copy individual positions to the uniform buffer buffer
+  memcpy(ubo.movedPos, mUBOdata.data(), sizeof(ubo));
+  // copy the entier ubo to the GPU
+  memcpy(mUniformBuffersMapped[pCurrentImage], &ubo, sizeof(ubo));
 }
 
-void VulkanRenderData::updateBuffers() {
+void VulkanRenderData::initNewEntity() {
   vkDeviceWaitIdle(mInit->mLogicalDevice); // this is terrible
 
   vkFreeCommandBuffers(mInit->mLogicalDevice, mCommandPool,
@@ -797,10 +849,13 @@ void VulkanRenderData::updateBuffers() {
   createCommandBuffers();
 }
 
-void VulkanRenderData::drawIndexed(uint32_t pNumVerticesToDraw /*=0*/) {
-  mNumIndiciesToDraw = pNumVerticesToDraw / 4 * 6; // 6 indicies per quad
-
-  updateBuffers();
+void VulkanRenderData::drawIndexed(uint32_t pNumQuadsToDraw /*=0*/) {
+  mNumIndiciesToDraw = pNumQuadsToDraw * 6; // 6 indicies per quad
+  // need to replace/update old vertex information/positions here
+  // with another array that holds current UBO information
+  // that will then be copied into shader in updateUniformBuffer()
+  //
+  /* updateBuffers(); */ // this is replaced with UBO
 }
 
 void VulkanRenderData::recreateSwapchain() {

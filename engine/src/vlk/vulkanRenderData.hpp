@@ -18,13 +18,17 @@ public:
   void devWaitIdle();
   // these are used by the renderer class
 
-  void drawIndexed(uint32_t pNumVerticesToDraw = 0);
+  void updateEntityPos(uint32_t pEntityID, glm::vec2 pCurrentPos);
+  void initNewEntity();
+  void drawIndexed(uint32_t pNumQuadsToDraw = 0);
 
   const int MAX_FRAMES_IN_FLIGHT = 2;
-  const int MAX_QUAD_COUNT = 100;
+  const int MAX_QUAD_COUNT = 400;
   const int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4;
   const int MAX_INDEX_COUNT = MAX_QUAD_COUNT * 6;
   std::vector<Vertex> mVertices; // this will be the verticies to be graphed
+  std::vector<glm::vec2> mUBOdata;
+
 private:
   VkQueue mGraphicsQueue;
   VkQueue mPresentQueue;
@@ -36,6 +40,8 @@ private:
   VkRenderPass mRenderPass;
 
   VkDescriptorSetLayout mDescSetLayout;
+  VkDescriptorPool mDescPool;
+  std::vector<VkDescriptorSet> mDescSets;
 
   VkPipelineLayout mPipelineLayout;
   VkPipeline mQuadGraphicsPipeline;
@@ -73,13 +79,14 @@ private:
   void createVertexBuffer();
   void createIndexBuffer();
   void createUniformBuffers();
+  void createDescriptorPool();
+  void createDescriptorSets();
   void updateUniformBuffer(uint32_t pCurrentImage);
   uint32_t findMemoryType(uint32_t pTypeFilter,
                           VkMemoryPropertyFlags pProperties);
   void createCommandBuffers();
   void recordCommandBuffer(VkCommandBuffer pCommandBuffer,
                            uint32_t pImageIndex);
-  void updateBuffers();
   void createSyncObjects();
 
   static std::vector<char> readShader(const std::string &pFilename);

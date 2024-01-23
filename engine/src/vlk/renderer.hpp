@@ -28,7 +28,7 @@ public:
 
   // drawing funcs
   void DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
-                const glm::vec4 &pColor);
+                const glm::vec4 &pColor, const uint32_t pQuadID);
 
   void DrawQuad(const glm::vec3 &pPosition, const glm::vec2 &pSize,
                 const glm::vec4 &pColor);
@@ -52,9 +52,10 @@ private:
   static const glm::vec2 convertSize(const glm::vec2 &pSize);
   static std::array<Vertex, 4> CreateQuad(const glm::vec2 &pPosition,
                                           const glm::vec2 &pSize,
-                                          const glm::vec4 &pColor);
+                                          const glm::vec4 &pColor,
+                                          const uint32_t pQuadID);
 
-  uint32_t mNumVerticesToDraw;
+  uint32_t mNumQuadsDrawn;
   const glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
                                         {0.5f, -0.5f, 0.0f, 1.0f},
                                         {0.5f, 0.5f, 0.0f, 1.0f},

@@ -16,7 +16,7 @@ Renderer::Renderer(std::shared_ptr<WindowVLK> pWindow,
 
   mVLKData.initRenderData(mVLKInit);
   mFrameBufferResized = false;
-  mNumVerticesToDraw = 0;
+  mNumQuadsDrawn = 0;
 }
 // this may not work if the device is already destroyed. it shouldnt tho?
 Renderer::~Renderer() {}
@@ -40,37 +40,52 @@ const glm::vec2 Renderer::convertSize(const glm::vec2 &pSize) {
 
 std::array<Vertex, 4> Renderer::CreateQuad(const glm::vec2 &pPosition,
                                            const glm::vec2 &pSize,
-                                           const glm::vec4 &pColor) {
+                                           const glm::vec4 &pColor,
+                                           const uint32_t pQuadID) {
   Vertex v0;
   v0.pos = pPosition;
   v0.color = pColor;
+  v0.entityID = pQuadID;
 
   Vertex v1;
   v1.pos = {pPosition.x + pSize.x, pPosition.y};
   v1.color = pColor;
+  v1.entityID = pQuadID;
 
   Vertex v2;
   v2.pos = {pPosition.x + pSize.x, pPosition.y + pSize.y};
   v2.color = pColor;
+  v2.entityID = pQuadID;
 
   Vertex v3;
   v3.pos = {pPosition.x, pPosition.y + pSize.y};
   v3.color = pColor;
+  v3.entityID = pQuadID;
 
   return {v0, v1, v2, v3};
 }
 
 void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
-                        const glm::vec4 &pColor) {
+                        const glm::vec4 &pColor, const uint32_t pQuadID) {
   /* DrawQuad({pPosition.x, pPosition.y, 0.0f}, pSize, pColor); */
-  if (mNumVerticesToDraw >= mVLKData.MAX_VERTEX_COUNT - 4) {
+  // if quad already exists, don't draw a new one, but update ubo position
+  if (mVLKData.mVertices.at(pQuadID * 4).color != glm::vec3{0.0f}) {
+    mVLKData.updateEntityPos(pQuadID, pPosition);
+    return;
+  }
+
+  if (mNumQuadsDrawn >= mVLKData.MAX_QUAD_COUNT) {
     Flush();
     BeginBatch();
   }
-  auto quad =
-      CreateQuad(convertPosition(pPosition), convertSize(pSize), pColor);
-  mVLKData.mVertices.insert(mVLKData.mVertices.end(), quad.begin(), quad.end());
-  mNumVerticesToDraw += 4;
+  auto quad = CreateQuad(convertPosition(pPosition), convertSize(pSize), pColor,
+                         pQuadID);
+  // quadID = current quads drawn
+
+  mVLKData.mVertices.insert(mVLKData.mVertices.begin() + (pQuadID * 4),
+                            quad.begin(), quad.end());
+  mNumQuadsDrawn++;
+  mVLKData.initNewEntity(); // rebuild swapchain with new vertex data
   // add quad vertices to the vertices vector
 }
 
@@ -88,7 +103,7 @@ void Renderer::DrawQuad(const glm::mat4 &pTransform, const glm::vec4 &pColor) {
     v.pos = pTransform * QUAD_VERTEX_POS[i];
     v.color = pColor;
     mVLKData.mVertices.push_back(v);
-    mNumVerticesToDraw++;
+    mNumQuadsDrawn++;
   }
 }
 
@@ -102,9 +117,9 @@ void Renderer::renderScreen() {
   BeginBatch();
 }
 
-void Renderer::Flush() { mVLKData.drawIndexed(mNumVerticesToDraw); }
+void Renderer::Flush() { mVLKData.drawIndexed(mNumQuadsDrawn); }
 
 void Renderer::BeginBatch() {
   mVLKData.mVertices.clear();
-  mNumVerticesToDraw = 0;
+  mNumQuadsDrawn = 0;
 }

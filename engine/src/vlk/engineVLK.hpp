@@ -46,6 +46,7 @@ private:
       mpRenderer; // render class that sets up vulkan and handles all internal
                   // structures and has some basic drawing primitives
   std::shared_ptr<WindowVLK> mpWindow; // simple glfw window class setup
+  uint32_t mNumEntities;
 };
 
 #endif

@@ -9,6 +9,7 @@ EngineVLK &EngineVLK::Get() { return *s_Instance; }
 
 EngineVLK::EngineVLK() {
   s_Instance = this; // set the current application instance
+  mNumEntities = 0;
 }
 
 EngineVLK::~EngineVLK() {
@@ -74,6 +75,7 @@ void EngineVLK::renderScreen() {
     // window not resized
     mpRenderer->renderScreen();
   }
+  mNumEntities = 0;
 }
 
 void EngineVLK::clearScreen() {}
@@ -91,11 +93,14 @@ void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {
   // need to format the position and size based on (0,0) being the center of the
   // screen and (1,1) being bottom right etc
   //
-
+  // gonna increment number of entities for each draw call then reset the count
+  // back to 0 for each render so the ID is the same for each entity for each
+  // loop as long as the loop doesn't change (may refactor later to be more
+  // map-esque)
   mpRenderer->DrawQuad({p1X, p1Y}, {m_PaddleWidth, m_PaddleHeight},
-                       {1.0f, 1.0f, 1.0f, 1.0f});
+                       {1.0f, 1.0f, 1.0f, 1.0f}, mNumEntities++);
   mpRenderer->DrawQuad({p2X, p2Y}, {m_PaddleWidth, m_PaddleHeight},
-                       {1.0f, 1.0f, 1.0f, 1.0f});
+                       {1.0f, 1.0f, 1.0f, 1.0f}, mNumEntities++);
   /* mpRenderer->Flush(); */
 }
 
