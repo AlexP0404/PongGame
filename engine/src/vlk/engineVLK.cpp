@@ -88,8 +88,10 @@ void EngineVLK::eraseTexture(const std::string &&textureName) {}
 void EngineVLK::drawNet() {}
 
 void EngineVLK::drawDot(int dotX, int dotY, int dotRadius) {
-  mpRenderer->DrawQuad({dotX, dotY}, {dotRadius * 2, dotRadius * 2},
-                       glm::vec3(1.0f), mNumEntities++);
+  /* mpRenderer->DrawQuad({dotX, dotY}, {dotRadius * 2, dotRadius * 2}, */
+  /*                      glm::vec3(1.0f), mNumEntities++); */
+  mpRenderer->DrawCircle({dotX, dotY}, static_cast<float>(dotRadius),
+                         glm::vec3(1.0f), mNumEntities++);
 }
 
 void EngineVLK::drawPaddles(int p1X, int p1Y, int p2X, int p2Y) {

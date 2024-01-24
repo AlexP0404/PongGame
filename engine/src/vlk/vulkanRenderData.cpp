@@ -1,17 +1,19 @@
 #include "vulkanRenderData.hpp"
 
+#include "circleVertex.hpp"
 #include "utils.hpp"
+#include "vertex.hpp"
 
 #include <cassert>
 #include <cstdint>
 #include <fstream>
-#include <iostream>
-#include <vector>
+#include <stdexcept>
 #include <vulkan/vulkan_core.h>
 
 VulkanRenderData::VulkanRenderData() {
   mCurrentFrame = 0;
-  mNumIndiciesToDraw = 0;
+  mNumQuadIndicesToDraw = 0;
+  mNumCirclesIndicesToDraw = 0;
 }
 
 VulkanRenderData::~VulkanRenderData() {
@@ -24,10 +26,16 @@ VulkanRenderData::~VulkanRenderData() {
   }
   vkDestroyDescriptorPool(mInit->mLogicalDevice, mDescPool, nullptr);
   vkDestroyDescriptorSetLayout(mInit->mLogicalDevice, mDescSetLayout, nullptr);
-  vkDestroyBuffer(mInit->mLogicalDevice, mIndexBuffer, nullptr);
-  vkFreeMemory(mInit->mLogicalDevice, mIndexBuferMem, nullptr);
-  vkDestroyBuffer(mInit->mLogicalDevice, mVertexBuffer, nullptr);
-  vkFreeMemory(mInit->mLogicalDevice, mVertexBufferMem, nullptr);
+
+  vkDestroyBuffer(mInit->mLogicalDevice, mCircleIndexBuffer, nullptr);
+  vkFreeMemory(mInit->mLogicalDevice, mCircleIndexBuferMem, nullptr);
+  vkDestroyBuffer(mInit->mLogicalDevice, mCircVertexBuffer, nullptr);
+  vkFreeMemory(mInit->mLogicalDevice, mCircVertexBufferMem, nullptr);
+
+  vkDestroyBuffer(mInit->mLogicalDevice, mQuadIndexBuffer, nullptr);
+  vkFreeMemory(mInit->mLogicalDevice, mQuadIndexBuferMem, nullptr);
+  vkDestroyBuffer(mInit->mLogicalDevice, mQuadVertexBuffer, nullptr);
+  vkFreeMemory(mInit->mLogicalDevice, mQuadVertexBufferMem, nullptr);
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     vkDestroySemaphore(mInit->mLogicalDevice, mImgAvailSemaphores[i], nullptr);
@@ -39,9 +47,13 @@ VulkanRenderData::~VulkanRenderData() {
   for (auto framebuffer : mFramebuffers) {
     vkDestroyFramebuffer(mInit->mLogicalDevice, framebuffer, nullptr);
   }
+  vkDestroyPipeline(mInit->mLogicalDevice, mCirclePipeline, nullptr);
+  vkDestroyPipelineLayout(mInit->mLogicalDevice, mCirclePipelineLayout,
+                          nullptr);
   vkDestroyPipeline(mInit->mLogicalDevice, mQuadGraphicsPipeline, nullptr);
-  vkDestroyPipelineLayout(mInit->mLogicalDevice, mPipelineLayout, nullptr);
-  vkDestroyRenderPass(mInit->mLogicalDevice, mRenderPass, nullptr);
+  vkDestroyPipelineLayout(mInit->mLogicalDevice, mQuadPipelineLayout, nullptr);
+  vkDestroyRenderPass(mInit->mLogicalDevice, mRenderPassInit, nullptr);
+  vkDestroyRenderPass(mInit->mLogicalDevice, mRenderPassFinal, nullptr);
   for (auto imageView : mSwapChainImageViews)
     vkDestroyImageView(mInit->mLogicalDevice, imageView, nullptr);
 }
@@ -51,13 +63,25 @@ void VulkanRenderData::initRenderData(std::shared_ptr<VulkanInit> pInit) {
   initQueues();
   getSwapChainImages();
   createImageViews();
-  createRenderPass();
+  createRenderPasses();
   createDescriptorSetLayout();
-  createGraphicsPipeline();
+  createGraphicsPipeline("shaders/quadVert.spv", "shaders/quadFrag.spv",
+                         Vertex::getBindingDescription(),
+                         Vertex::getAttributeDescriptions().size(),
+                         Vertex::getAttributeDescriptions().data(), 1,
+                         &mDescSetLayout, mQuadPipelineLayout,
+                         mQuadGraphicsPipeline);
+  createGraphicsPipeline("shaders/circleVert.spv", "shaders/circleFrag.spv",
+                         CircleVertex::getBindingDescription(),
+                         CircleVertex::getAttributeDescriptions().size(),
+                         CircleVertex::getAttributeDescriptions().data(), 1,
+                         &mDescSetLayout, mCirclePipelineLayout,
+                         mCirclePipeline);
   createFramebuffers();
   createCommandPool();
-  createVertexBuffer();
-  createIndexBuffer();
+  createVertexBuffers();
+  createIndexBuffers();
+  /* createCircVertexBuffer(); */
   createUniformBuffers();
   createDescriptorPool();
   createDescriptorSets();
@@ -116,17 +140,17 @@ void VulkanRenderData::createImageViews() {
   }
 }
 
-void VulkanRenderData::createRenderPass() {
-  VkAttachmentDescription colorAttachment{};
-  Utils::zeroInitializeStruct(colorAttachment);
-  colorAttachment.format = mInit->mSwapChainImageFormat;
-  colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-  colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-  colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-  colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-  colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-  colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+void VulkanRenderData::createRenderPasses() {
+  VkAttachmentDescription colorAttachmentInit{};
+  Utils::zeroInitializeStruct(colorAttachmentInit);
+  colorAttachmentInit.format = mInit->mSwapChainImageFormat;
+  colorAttachmentInit.samples = VK_SAMPLE_COUNT_1_BIT;
+  colorAttachmentInit.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  colorAttachmentInit.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  colorAttachmentInit.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  colorAttachmentInit.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  colorAttachmentInit.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  colorAttachmentInit.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
   VkAttachmentReference colorAttachmentRef{};
   Utils::zeroInitializeStruct(colorAttachmentRef);
@@ -145,14 +169,27 @@ void VulkanRenderData::createRenderPass() {
   Utils::zeroInitializeStruct(renderPassInfo);
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   renderPassInfo.attachmentCount = 1;
-  renderPassInfo.pAttachments = &colorAttachment;
+  renderPassInfo.pAttachments = &colorAttachmentInit;
   renderPassInfo.subpassCount = 1;
   renderPassInfo.pSubpasses = &subpass;
 
   if (vkCreateRenderPass(mInit->mLogicalDevice, &renderPassInfo, nullptr,
-                         &mRenderPass) != VK_SUCCESS) {
+                         &mRenderPassInit) != VK_SUCCESS) {
     throw std::runtime_error("Failed to create render pass!");
   }
+
+  VkAttachmentDescription colorAttachmentFinal{};
+  colorAttachmentFinal = colorAttachmentInit;
+  colorAttachmentFinal.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+  colorAttachmentFinal.initialLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+  VkRenderPassCreateInfo renderPassInfo2{};
+  renderPassInfo2 = renderPassInfo;
+  renderPassInfo2.pAttachments = &colorAttachmentFinal;
+
+  if (vkCreateRenderPass(mInit->mLogicalDevice, &renderPassInfo2, nullptr,
+                         &mRenderPassFinal) != VK_SUCCESS)
+    throw std::runtime_error("Failed to create second render pass!");
 }
 
 void VulkanRenderData::createDescriptorSetLayout() {
@@ -175,10 +212,15 @@ void VulkanRenderData::createDescriptorSetLayout() {
                                        nullptr, &mDescSetLayout));
 }
 
-void VulkanRenderData::createGraphicsPipeline() {
+void VulkanRenderData::createGraphicsPipeline(
+    const std::string &&pVertName, const std::string &pFragName,
+    VkVertexInputBindingDescription pBindingDesc, size_t pAttrDescCount,
+    VkVertexInputAttributeDescription *ppAttrDesc, uint32_t pDescSetLayoutCount,
+    VkDescriptorSetLayout *ppDescSetLayout, VkPipelineLayout &pPipelineLayout,
+    VkPipeline &pPipeline) {
   assert(mInit);
-  auto vertShaderCode = readShader("shaders/vert.spv");
-  auto fragShaderCode = readShader("shaders/frag.spv");
+  auto vertShaderCode = readShader(pVertName);
+  auto fragShaderCode = readShader(pFragName);
 
   VkShaderModule vShaderModule = createShaderModule(vertShaderCode);
   VkShaderModule fShaderModule = createShaderModule(fragShaderCode);
@@ -205,16 +247,13 @@ void VulkanRenderData::createGraphicsPipeline() {
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   Utils::zeroInitializeStruct(vertexInputInfo);
-  auto bindingDesc = Vertex::getBindingDescription();
-  auto attrDesc = Vertex::getAttributeDescriptions();
 
   vertexInputInfo.sType =
       VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexInputInfo.vertexBindingDescriptionCount = 1;
-  vertexInputInfo.pVertexBindingDescriptions = &bindingDesc;
-  vertexInputInfo.vertexAttributeDescriptionCount =
-      static_cast<uint32_t>(attrDesc.size());
-  vertexInputInfo.pVertexAttributeDescriptions = attrDesc.data();
+  vertexInputInfo.pVertexBindingDescriptions = &pBindingDesc;
+  vertexInputInfo.vertexAttributeDescriptionCount = pAttrDescCount;
+  vertexInputInfo.pVertexAttributeDescriptions = ppAttrDesc;
 
   VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
   Utils::zeroInitializeStruct(inputAssembly);
@@ -316,13 +355,13 @@ void VulkanRenderData::createGraphicsPipeline() {
   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
   Utils::zeroInitializeStruct(pipelineLayoutInfo);
   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipelineLayoutInfo.setLayoutCount = 1;
-  pipelineLayoutInfo.pSetLayouts = &mDescSetLayout;
+  pipelineLayoutInfo.setLayoutCount = pDescSetLayoutCount;
+  pipelineLayoutInfo.pSetLayouts = ppDescSetLayout;
   pipelineLayoutInfo.pushConstantRangeCount = 0;
   pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
   if (vkCreatePipelineLayout(mInit->mLogicalDevice, &pipelineLayoutInfo,
-                             nullptr, &mPipelineLayout) != VK_SUCCESS) {
+                             nullptr, &pPipelineLayout) != VK_SUCCESS) {
     throw std::runtime_error("failed to create pipeline layout!");
   }
 
@@ -339,20 +378,31 @@ void VulkanRenderData::createGraphicsPipeline() {
   pipelineInfo.pDepthStencilState = nullptr;
   pipelineInfo.pColorBlendState = &colorBlending;
   pipelineInfo.pDynamicState = &dynamicState;
-  pipelineInfo.layout = mPipelineLayout;
-  pipelineInfo.renderPass = mRenderPass;
+  pipelineInfo.layout = pPipelineLayout;
+  pipelineInfo.renderPass = mRenderPassInit;
   pipelineInfo.subpass = 0;
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex = -1;
 
   if (vkCreateGraphicsPipelines(mInit->mLogicalDevice, VK_NULL_HANDLE, 1,
                                 &pipelineInfo, nullptr,
-                                &mQuadGraphicsPipeline) != VK_SUCCESS)
+                                &pPipeline) != VK_SUCCESS)
     throw std::runtime_error("Failed to create graphics pipeline!");
 
   vkDestroyShaderModule(mInit->mLogicalDevice, vShaderModule, nullptr);
   vkDestroyShaderModule(mInit->mLogicalDevice, fShaderModule, nullptr);
 }
+
+/* void VulkanRenderData::createGraphicsPipeline() { */
+/*   assert(mInit); */
+/*   auto vertShaderCode = readShader("shaders/quadVert.spv"); */
+/*   auto fragShaderCode = readShader("shaders/quadFrag.spv"); */
+/**/
+/*   VkShaderModule vShaderModule = createShaderModule(vertShaderCode); */
+/*   VkShaderModule fShaderModule = createShaderModule(fragShaderCode); */
+/**/
+/*   VkPipelineShaderStageCreateInfo vertShaderStageInfo{}; */
+/* } */
 
 std::vector<char> VulkanRenderData::readShader(const std::string &pFilename) {
   std::ifstream file(pFilename, std::ios::ate | std::ios::binary);
@@ -401,7 +451,7 @@ void VulkanRenderData::createFramebuffers() {
     VkFramebufferCreateInfo framebufferInfo{};
     Utils::zeroInitializeStruct(framebufferInfo);
     framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = mRenderPass;
+    framebufferInfo.renderPass = mRenderPassInit;
     framebufferInfo.attachmentCount = 1;
     framebufferInfo.pAttachments = attachments;
     framebufferInfo.width = mInit->mSwapChainExtent.width;
@@ -502,9 +552,18 @@ void VulkanRenderData::copyBuffer(VkBuffer pSrcBuffer, VkBuffer pDstBuffer,
   vkFreeCommandBuffers(mInit->mLogicalDevice, mCommandPool, 1, &commandBuffer);
 }
 
-void VulkanRenderData::createVertexBuffer() {
-  mVertices.resize(MAX_VERTEX_COUNT);
-  VkDeviceSize bufferSize = sizeof(mVertices[0]) * mVertices.size();
+void VulkanRenderData::createVertexBuffers() {
+  mQuadVertices.resize(MAX_VERTEX_COUNT);
+  mCircleVertices.resize(MAX_VERTEX_COUNT);
+  createVertexBuffer(mQuadVertices, mQuadVertexBuffer, mQuadVertexBufferMem);
+  createVertexBuffer(mCircleVertices, mCircVertexBuffer, mCircVertexBufferMem);
+}
+
+template <typename t>
+void VulkanRenderData::createVertexBuffer(std::vector<t> pVertices,
+                                          VkBuffer &pBuffer,
+                                          VkDeviceMemory &pBufferMem) {
+  VkDeviceSize bufferSize = sizeof(pVertices[0]) * pVertices.size();
 
   VkBuffer stagingBuffer;
   VkDeviceMemory stagingBuffMem;
@@ -515,17 +574,16 @@ void VulkanRenderData::createVertexBuffer() {
                stagingBuffer, stagingBuffMem);
 
   void *data;
-  void *vertexData;
   vkMapMemory(mInit->mLogicalDevice, stagingBuffMem, 0, bufferSize, 0, &data);
-  memcpy(data, mVertices.data(), (size_t)bufferSize);
+  memcpy(data, pVertices.data(), (size_t)bufferSize);
   vkUnmapMemory(mInit->mLogicalDevice, stagingBuffMem);
 
-  createBuffer(
-      bufferSize,
-      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mVertexBuffer, mVertexBufferMem);
+  createBuffer(bufferSize,
+               VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                   VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, pBuffer, pBufferMem);
 
-  copyBuffer(stagingBuffer, mVertexBuffer, bufferSize);
+  copyBuffer(stagingBuffer, pBuffer, bufferSize);
 
   vkDestroyBuffer(mInit->mLogicalDevice, stagingBuffer, nullptr);
   vkFreeMemory(mInit->mLogicalDevice, stagingBuffMem, nullptr);
@@ -547,23 +605,31 @@ uint32_t VulkanRenderData::findMemoryType(uint32_t pTypeFilter,
   throw std::runtime_error("Failed to find suitable memory type!");
 }
 
-void VulkanRenderData::createIndexBuffer() {
+void VulkanRenderData::createIndexBuffers() {
   // fill index array (may be wasteful idk)
-  mIndices.resize(MAX_INDEX_COUNT);
+  mQuadIndices.resize(MAX_INDEX_COUNT);
   uint32_t offset = 0;
   for (size_t i = 0; i < MAX_INDEX_COUNT; i += 6) {
-    mIndices[i + 0] = 0 + offset;
-    mIndices[i + 1] = 1 + offset;
-    mIndices[i + 2] = 2 + offset;
-    mIndices[i + 3] = 2 + offset;
-    mIndices[i + 4] = 3 + offset;
-    mIndices[i + 5] = 0 + offset;
+    mQuadIndices[i + 0] = 0 + offset;
+    mQuadIndices[i + 1] = 1 + offset;
+    mQuadIndices[i + 2] = 2 + offset;
+    mQuadIndices[i + 3] = 2 + offset;
+    mQuadIndices[i + 4] = 3 + offset;
+    mQuadIndices[i + 5] = 0 + offset;
 
     offset += 4;
   }
+  mCircleIndices = mQuadIndices;
 
+  createIndexBuffer(mQuadIndices, mQuadIndexBuffer, mQuadIndexBuferMem);
+  createIndexBuffer(mCircleIndices, mCircleIndexBuffer, mCircleIndexBuferMem);
+}
+
+void VulkanRenderData::createIndexBuffer(std::vector<uint16_t> pIndices,
+                                         VkBuffer &pBuffer,
+                                         VkDeviceMemory &pBufferMem) {
   assert(mInit);
-  VkDeviceSize bufferSize = sizeof(mIndices[0]) * mIndices.size();
+  VkDeviceSize bufferSize = sizeof(pIndices[0]) * pIndices.size();
 
   VkBuffer stagingBuffer;
   VkDeviceMemory stagingBuffMem;
@@ -575,19 +641,50 @@ void VulkanRenderData::createIndexBuffer() {
 
   void *data;
   vkMapMemory(mInit->mLogicalDevice, stagingBuffMem, 0, bufferSize, 0, &data);
-  memcpy(data, mIndices.data(), (size_t)bufferSize);
+  memcpy(data, pIndices.data(), (size_t)bufferSize);
   vkUnmapMemory(mInit->mLogicalDevice, stagingBuffMem);
 
-  createBuffer(
-      bufferSize,
-      VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mIndexBuffer, mIndexBuferMem);
+  createBuffer(bufferSize,
+               VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                   VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, pBuffer, pBufferMem);
 
-  copyBuffer(stagingBuffer, mIndexBuffer, bufferSize);
+  copyBuffer(stagingBuffer, pBuffer, bufferSize);
 
   vkDestroyBuffer(mInit->mLogicalDevice, stagingBuffer, nullptr);
   vkFreeMemory(mInit->mLogicalDevice, stagingBuffMem, nullptr);
 }
+
+/* void VulkanRenderData::createCircVertexBuffer() { */
+/*   mCircleVertices.resize(MAX_VERTEX_COUNT); */
+/*   VkDeviceSize bufferSize = sizeof(mCircleVertices[0]) *
+ * mCircleVertices.size(); */
+/**/
+/*   VkBuffer stagingBuffer; */
+/*   VkDeviceMemory stagingBuffMem; */
+/**/
+/*   createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, */
+/*                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | */
+/*                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, */
+/*                stagingBuffer, stagingBuffMem); */
+/**/
+/*   void *data; */
+/*   vkMapMemory(mInit->mLogicalDevice, stagingBuffMem, 0, bufferSize, 0,
+ * &data); */
+/*   memcpy(data, mCircleVertices.data(), (size_t)bufferSize); */
+/*   vkUnmapMemory(mInit->mLogicalDevice, stagingBuffMem); */
+/**/
+/*   createBuffer(bufferSize, */
+/*                VK_BUFFER_USAGE_TRANSFER_DST_BIT | */
+/*                    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, */
+/*                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, mCircVertexBuffer, */
+/*                mCircVertexBufferMem); */
+/**/
+/*   copyBuffer(stagingBuffer, mCircVertexBuffer, bufferSize); */
+/**/
+/*   vkDestroyBuffer(mInit->mLogicalDevice, stagingBuffer, nullptr); */
+/*   vkFreeMemory(mInit->mLogicalDevice, stagingBuffMem, nullptr); */
+/* } */
 
 void VulkanRenderData::createUniformBuffers() {
   assert(mInit);
@@ -660,8 +757,24 @@ void VulkanRenderData::createDescriptorSets() {
   }
 }
 
+void VulkanRenderData::createCommandBuffers(size_t pBeginIndex,
+                                            size_t pEndIndex) {
+  VkCommandBufferAllocateInfo allocInfo{};
+  Utils::zeroInitializeStruct(allocInfo);
+  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  allocInfo.commandPool = mCommandPool;
+  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  allocInfo.commandBufferCount = pEndIndex - pBeginIndex;
+
+  if (vkAllocateCommandBuffers(mInit->mLogicalDevice, &allocInfo,
+                               mCommandBuffers.data() + pBeginIndex) !=
+      VK_SUCCESS) {
+    throw std::runtime_error("Failed to create command buffer!");
+  }
+}
+
 void VulkanRenderData::createCommandBuffers() {
-  mCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+  mCommandBuffers.resize(MAX_FRAMES_IN_FLIGHT * 2);
   VkCommandBufferAllocateInfo allocInfo{};
   Utils::zeroInitializeStruct(allocInfo);
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -675,8 +788,8 @@ void VulkanRenderData::createCommandBuffers() {
   }
 }
 
-void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
-                                           uint32_t pImageIndex) {
+void VulkanRenderData::recordQuadCommandBuffer(VkCommandBuffer pCommandBuffer,
+                                               uint32_t pImageIndex) {
   assert(mInit);
   VkCommandBufferBeginInfo beginInfo{};
   Utils::zeroInitializeStruct(beginInfo);
@@ -691,7 +804,7 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
   VkRenderPassBeginInfo renderPassInfo{};
   Utils::zeroInitializeStruct(renderPassInfo);
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  renderPassInfo.renderPass = mRenderPass;
+  renderPassInfo.renderPass = mRenderPassInit;
   renderPassInfo.framebuffer = mFramebuffers[pImageIndex];
   renderPassInfo.renderArea.offset.x = 0;
   renderPassInfo.renderArea.offset.y = 0;
@@ -721,18 +834,83 @@ void VulkanRenderData::recordCommandBuffer(VkCommandBuffer pCommandBuffer,
   scissor.extent = mInit->mSwapChainExtent;
   vkCmdSetScissor(pCommandBuffer, 0, 1, &scissor);
 
-  VkBuffer vertexBuffers[] = {mVertexBuffer};
+  VkBuffer vertexBuffers[] = {mQuadVertexBuffer};
   VkDeviceSize offsets[] = {0};
   vkCmdBindVertexBuffers(pCommandBuffer, 0, 1, vertexBuffers, offsets);
 
-  vkCmdBindIndexBuffer(pCommandBuffer, mIndexBuffer, 0, VK_INDEX_TYPE_UINT16);
+  vkCmdBindIndexBuffer(pCommandBuffer, mQuadIndexBuffer, 0,
+                       VK_INDEX_TYPE_UINT16);
 
   vkCmdBindDescriptorSets(pCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                          mPipelineLayout, 0, 1, &mDescSets[mCurrentFrame], 0,
-                          nullptr);
+                          mQuadPipelineLayout, 0, 1, &mDescSets[mCurrentFrame],
+                          0, nullptr);
 
-  vkCmdDrawIndexed(pCommandBuffer, static_cast<uint32_t>(mIndices.size()), 1, 0,
-                   0, 0);
+  vkCmdDrawIndexed(pCommandBuffer, mNumQuadIndicesToDraw, 1, 0, 0, 0);
+
+  vkCmdEndRenderPass(pCommandBuffer);
+
+  if (vkEndCommandBuffer(pCommandBuffer) != VK_SUCCESS)
+    throw std::runtime_error("Failed to record command buffer!");
+}
+
+void VulkanRenderData::recordCircCommandBuffer(VkCommandBuffer pCommandBuffer,
+                                               uint32_t pImageIndex) {
+  assert(mInit);
+  VkCommandBufferBeginInfo beginInfo{};
+  Utils::zeroInitializeStruct(beginInfo);
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = 0;
+  beginInfo.pInheritanceInfo = nullptr;
+
+  if (vkBeginCommandBuffer(pCommandBuffer, &beginInfo) != VK_SUCCESS) {
+    throw std::runtime_error("Failed to begin recording command buffer!");
+  }
+
+  VkRenderPassBeginInfo renderPassInfo{};
+  Utils::zeroInitializeStruct(renderPassInfo);
+  renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+  renderPassInfo.renderPass = mRenderPassFinal;
+  renderPassInfo.framebuffer = mFramebuffers[pImageIndex];
+  renderPassInfo.renderArea.offset.x = 0;
+  renderPassInfo.renderArea.offset.y = 0;
+  renderPassInfo.renderArea.extent = mInit->mSwapChainExtent;
+  VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+  renderPassInfo.clearValueCount = 1;
+  renderPassInfo.pClearValues = &clearColor;
+
+  vkCmdBeginRenderPass(pCommandBuffer, &renderPassInfo,
+                       VK_SUBPASS_CONTENTS_INLINE);
+
+  vkCmdBindPipeline(pCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    mCirclePipeline);
+
+  VkViewport viewport{};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width = static_cast<float>(mInit->mSwapChainExtent.width);
+  viewport.height = static_cast<float>(mInit->mSwapChainExtent.height);
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  vkCmdSetViewport(pCommandBuffer, 0, 1, &viewport);
+
+  VkRect2D scissor{};
+  scissor.offset.x = 0;
+  scissor.offset.y = 0;
+  scissor.extent = mInit->mSwapChainExtent;
+  vkCmdSetScissor(pCommandBuffer, 0, 1, &scissor);
+
+  VkBuffer vertexBuffers[] = {mCircVertexBuffer};
+  VkDeviceSize offsets[] = {0};
+  vkCmdBindVertexBuffers(pCommandBuffer, 0, 1, vertexBuffers, offsets);
+
+  vkCmdBindIndexBuffer(pCommandBuffer, mCircleIndexBuffer, 0,
+                       VK_INDEX_TYPE_UINT16);
+
+  vkCmdBindDescriptorSets(pCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                          mCirclePipelineLayout, 0, 1,
+                          &mDescSets[mCurrentFrame], 0, nullptr);
+
+  vkCmdDrawIndexed(pCommandBuffer, mNumCirclesIndicesToDraw, 1, 0, 0, 0);
 
   vkCmdEndRenderPass(pCommandBuffer);
 
@@ -786,7 +964,9 @@ void VulkanRenderData::drawFrame(bool pFrameBufferResized) {
   vkResetCommandBuffer(mCommandBuffers[mCurrentFrame], 0);
 
   updateUniformBuffer(mCurrentFrame);
-  recordCommandBuffer(mCommandBuffers[mCurrentFrame], imageIndex);
+  recordQuadCommandBuffer(mCommandBuffers[mCurrentFrame], imageIndex);
+  recordCircCommandBuffer(mCommandBuffers[mCurrentFrame + MAX_FRAMES_IN_FLIGHT],
+                          imageIndex);
 
   VkSubmitInfo submitInfo{};
   Utils::zeroInitializeStruct(submitInfo);
@@ -798,8 +978,12 @@ void VulkanRenderData::drawFrame(bool pFrameBufferResized) {
   submitInfo.waitSemaphoreCount = 1;
   submitInfo.pWaitSemaphores = waitSemaphores;
   submitInfo.pWaitDstStageMask = waitStage;
-  submitInfo.commandBufferCount = 1;
-  submitInfo.pCommandBuffers = &mCommandBuffers[mCurrentFrame];
+  submitInfo.commandBufferCount = 2;
+  VkCommandBuffer commandBuffersUsed[] = {
+      mCommandBuffers[mCurrentFrame],
+      mCommandBuffers[mCurrentFrame + MAX_FRAMES_IN_FLIGHT]};
+  submitInfo.pCommandBuffers =
+      commandBuffersUsed; //&mCommandBuffers[mCurrentFrame];
 
   VkSemaphore signalSemaphores[] = {mRndrFinSemaphores[mCurrentFrame]};
   submitInfo.signalSemaphoreCount = 1;
@@ -838,8 +1022,8 @@ void VulkanRenderData::updateEntityPos(uint32_t pEntityID,
   // this needs to take the difference between the current vertex/quad position
   // and the one saved in the vertex array, and store that value in the mUBOdata
   // buffer
-  glm::vec4 posDiff = {pCurrentPos.x - mVertices[pEntityID * 4].pos.x,
-                       pCurrentPos.y - mVertices[pEntityID * 4].pos.y,
+  glm::vec4 posDiff = {pCurrentPos.x - mQuadVertices[pEntityID * 4].pos.x,
+                       pCurrentPos.y - mQuadVertices[pEntityID * 4].pos.y,
                        glm::vec2(0.0f)}; // this may be backwards
   mUbo.movedPos[pEntityID] = posDiff;
 }
@@ -853,28 +1037,40 @@ void VulkanRenderData::updateUniformBuffer(uint32_t pCurrentImage) {
   memcpy(mUniformBuffersMapped[pCurrentImage], &stagedUBO, sizeof(UBO));
 }
 
-void VulkanRenderData::initNewEntity() {
+void VulkanRenderData::initNewEntity(bool pIsCircle) {
   vkDeviceWaitIdle(mInit->mLogicalDevice); // this is terrible
+  if (pIsCircle) {
+    // do something different
+    vkFreeCommandBuffers(mInit->mLogicalDevice, mCommandPool,
+                         mCommandBuffers.size() / 2,
+                         mCommandBuffers.data() + mCommandBuffers.size() / 2);
+    /* vkDestroyBuffer(mInit->mLogicalDevice, mCircleIndexBuffer, nullptr); */
+    /* vkFreeMemory(mInit->mLogicalDevice, mCircleIndexBuferMem, nullptr); */
+    vkDestroyBuffer(mInit->mLogicalDevice, mCircVertexBuffer, nullptr);
+    vkFreeMemory(mInit->mLogicalDevice, mCircVertexBufferMem, nullptr);
+
+    createVertexBuffer(mCircleVertices, mCircVertexBuffer,
+                       mCircVertexBufferMem);
+    createCommandBuffers(mCommandBuffers.size() / 2, mCommandBuffers.size());
+    return;
+  }
 
   vkFreeCommandBuffers(mInit->mLogicalDevice, mCommandPool,
-                       mCommandBuffers.size(), mCommandBuffers.data());
-  vkDestroyBuffer(mInit->mLogicalDevice, mIndexBuffer, nullptr);
-  vkFreeMemory(mInit->mLogicalDevice, mIndexBuferMem, nullptr);
-  vkDestroyBuffer(mInit->mLogicalDevice, mVertexBuffer, nullptr);
-  vkFreeMemory(mInit->mLogicalDevice, mVertexBufferMem, nullptr);
+                       mCommandBuffers.size() / 2, mCommandBuffers.data());
+  /* vkDestroyBuffer(mInit->mLogicalDevice, mQuadIndexBuffer, nullptr); */
+  /* vkFreeMemory(mInit->mLogicalDevice, mQuadIndexBuferMem, nullptr); */
+  vkDestroyBuffer(mInit->mLogicalDevice, mQuadVertexBuffer, nullptr);
+  vkFreeMemory(mInit->mLogicalDevice, mQuadVertexBufferMem, nullptr);
 
-  createVertexBuffer();
-  createIndexBuffer();
-  createCommandBuffers();
+  createVertexBuffer(mQuadVertices, mQuadVertexBuffer, mQuadVertexBufferMem);
+  /* createIndexBuffers(); */
+  createCommandBuffers(0, mCommandBuffers.size() / 2);
 }
 
-void VulkanRenderData::drawIndexed(uint32_t pNumQuadsToDraw /*=0*/) {
-  mNumIndiciesToDraw = pNumQuadsToDraw * 6; // 6 indicies per quad
-  // need to replace/update old vertex information/positions here
-  // with another array that holds current UBO information
-  // that will then be copied into shader in updateUniformBuffer()
-  //
-  /* updateBuffers(); */ // this is replaced with UBO
+void VulkanRenderData::drawIndexed(uint32_t pNumQuadsToDraw /*=0*/,
+                                   uint32_t pNumCircsToDraw) {
+  mNumQuadIndicesToDraw = pNumQuadsToDraw * 6; // 6 indicies per quad
+  mNumCirclesIndicesToDraw = pNumCircsToDraw * 6;
 }
 
 void VulkanRenderData::recreateSwapchain() {

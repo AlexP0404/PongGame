@@ -1,14 +1,17 @@
 #ifndef VULKAN_RENDER_DATA_HPP
 #define VULKAN_RENDER_DATA_HPP
 
+#include "circleVertex.hpp"
 #include "ubo.hpp"
 #include "vertex.hpp"
 #include "vulkanInit.hpp"
 
+#include <cstdint>
 #include <glm/glm.hpp>
 
 #include <memory>
 #include <vector>
+#include <vulkan/vulkan_core.h>
 
 class VulkanRenderData {
 public:
@@ -20,14 +23,15 @@ public:
   // these are used by the renderer class
 
   void updateEntityPos(uint32_t pEntityID, glm::vec2 pCurrentPos);
-  void initNewEntity();
-  void drawIndexed(uint32_t pNumQuadsToDraw = 0);
+  void initNewEntity(bool pIsCircle = false);
+  void drawIndexed(uint32_t pNumQuadsToDraw = 0, uint32_t pNumCircsToDraw = 0);
 
   const int MAX_FRAMES_IN_FLIGHT = 2;
   const int MAX_QUAD_COUNT = 400;
   const int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4;
   const int MAX_INDEX_COUNT = MAX_QUAD_COUNT * 6;
-  std::vector<Vertex> mVertices; // this will be the verticies to be graphed
+  std::vector<Vertex> mQuadVertices; // this will be the verticies to be graphed
+  std::vector<CircleVertex> mCircleVertices;
 
 private:
   VkQueue mGraphicsQueue;
@@ -37,23 +41,33 @@ private:
   std::vector<VkImageView> mSwapChainImageViews;
   std::vector<VkFramebuffer> mFramebuffers;
 
-  VkRenderPass mRenderPass;
+  VkRenderPass mRenderPassInit;
+  VkRenderPass mRenderPassFinal;
 
   VkDescriptorSetLayout mDescSetLayout;
   VkDescriptorPool mDescPool;
   std::vector<VkDescriptorSet> mDescSets;
 
-  VkPipelineLayout mPipelineLayout;
+  VkPipelineLayout mQuadPipelineLayout;
   VkPipeline mQuadGraphicsPipeline;
+  VkPipelineLayout mCirclePipelineLayout;
+  VkPipeline mCirclePipeline;
 
   VkCommandPool mCommandPool;
   std::vector<VkCommandBuffer> mCommandBuffers;
 
-  VkBuffer mVertexBuffer;
-  VkDeviceMemory mVertexBufferMem;
-  VkBuffer mIndexBuffer;
-  VkDeviceMemory mIndexBuferMem;
-  std::vector<uint16_t> mIndices;
+  VkBuffer mQuadVertexBuffer;
+  VkDeviceMemory mQuadVertexBufferMem;
+  VkBuffer mQuadIndexBuffer;
+  VkDeviceMemory mQuadIndexBuferMem;
+  std::vector<uint16_t> mQuadIndices;
+  VkBuffer mCircleIndexBuffer;
+  VkDeviceMemory mCircleIndexBuferMem;
+  std::vector<uint16_t> mCircleIndices;
+
+  VkBuffer mCircVertexBuffer;
+  VkDeviceMemory mCircVertexBufferMem;
+
   std::vector<VkBuffer> mUniformBuffers;
   std::vector<VkDeviceMemory> mUniformBuffersMemory;
   std::vector<void *> mUniformBuffersMapped;
@@ -68,17 +82,27 @@ private:
   void getSwapChainImages();
   void createImageViews();
   void recreateSwapchain();
-  void createRenderPass();
+  void createRenderPasses();
   void createDescriptorSetLayout();
-  void createGraphicsPipeline();
+  void createGraphicsPipeline(
+      const std::string &&pVertName, const std::string &pFragName,
+      VkVertexInputBindingDescription pBindingDesc, size_t pAttrDescCount,
+      VkVertexInputAttributeDescription *ppAttrDesc,
+      uint32_t pDescSetLayoutCount, VkDescriptorSetLayout *ppDescSetLayout,
+      VkPipelineLayout &pPipelineLayout, VkPipeline &pPipeline);
   void createFramebuffers();
   void createCommandPool();
   void createBuffer(VkDeviceSize pSize, VkBufferUsageFlags pUsage,
                     VkMemoryPropertyFlags pProperties, VkBuffer &pBuffer,
                     VkDeviceMemory &pBufferMem);
   void copyBuffer(VkBuffer pSrcBuffer, VkBuffer pDstBuffer, VkDeviceSize pSize);
-  void createVertexBuffer();
-  void createIndexBuffer();
+  void createVertexBuffers();
+  template <typename t>
+  void createVertexBuffer(std::vector<t> pVertices, VkBuffer &pBuffer,
+                          VkDeviceMemory &pBufferMem);
+  void createIndexBuffers();
+  void createIndexBuffer(std::vector<uint16_t> pIndices, VkBuffer &pBuffer,
+                         VkDeviceMemory &pBufferMem);
   void createUniformBuffers();
   void createDescriptorPool();
   void createDescriptorSets();
@@ -86,8 +110,11 @@ private:
   uint32_t findMemoryType(uint32_t pTypeFilter,
                           VkMemoryPropertyFlags pProperties);
   void createCommandBuffers();
-  void recordCommandBuffer(VkCommandBuffer pCommandBuffer,
-                           uint32_t pImageIndex);
+  void createCommandBuffers(size_t pBeginIndex, size_t pEndIndex);
+  void recordQuadCommandBuffer(VkCommandBuffer pCommandBuffer,
+                               uint32_t pImageIndex);
+  void recordCircCommandBuffer(VkCommandBuffer pCommandBuffer,
+                               uint32_t pImageIndex);
   void createSyncObjects();
 
   static std::vector<char> readShader(const std::string &pFilename);
@@ -96,7 +123,8 @@ private:
 private:
   std::shared_ptr<VulkanInit> mInit;
   uint32_t mCurrentFrame;
-  uint32_t mNumIndiciesToDraw;
+  uint32_t mNumQuadIndicesToDraw;
+  uint32_t mNumCirclesIndicesToDraw;
 };
 
 #endif

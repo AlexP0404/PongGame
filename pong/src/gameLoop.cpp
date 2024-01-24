@@ -245,6 +245,7 @@ void GameLoop::handleInputs() {
         /* countDown(); */
         gameEngine.eraseTexture("mainTextTexture");
         start = true;
+        gameEngine.clearScreen();
         if (singlePlayer) {
           ai1.setPaddle(&p2);
           ai2.setPaddle(&p1);
@@ -262,7 +263,7 @@ void GameLoop::handleInputs() {
         if (lastPressedEsc) {
           continue;
         }
-        /* gameEngine.clearScreen(); */
+        gameEngine.clearScreen();
         lastPressedEsc = true;
         mainText = "Are You Sure You Want To Quit?";
         setStartText();
@@ -271,6 +272,12 @@ void GameLoop::handleInputs() {
       }
       // all the other cases now update lastPressedEsc to true because it
       // wasnt pressed 2x in a row
+      if (input.IsKeyDown(KeyCode::Space) && lastPressedEsc) {
+        gameEngine.eraseTexture("difficultyPrompt");
+        countDown();
+        gameEngine.eraseTexture("mainTextTexture");
+        lastPressedEsc = false;
+      }
       if (input.IsKeyDown(KeyCode::Enter) && lastPressedEsc) {
         quit = true;
       }
@@ -289,12 +296,6 @@ void GameLoop::handleInputs() {
           ai1.movePaddle();
           ai2.movePaddle();
         }
-      }
-      if (input.IsKeyDown(KeyCode::Space) && lastPressedEsc) {
-        lastPressedEsc = false;
-        gameEngine.eraseTexture("difficultyPrompt");
-        countDown();
-        gameEngine.eraseTexture("mainTextTexture");
       }
     }
   }

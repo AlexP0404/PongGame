@@ -1,6 +1,7 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
 
+#include <cstdint>
 #include <iostream>
 #include <memory>
 
@@ -27,6 +28,8 @@ public:
   void renderScreen();
 
   // drawing funcs
+  void DrawCircle(const glm::vec2 &pPosition, const float pRadius,
+                  const glm::vec3 &pColor, const uint32_t pCircleID);
   void DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
                 const glm::vec3 &pColor, const uint32_t pQuadID);
 
@@ -57,6 +60,7 @@ private:
                                           const uint32_t pQuadID);
 
   uint32_t mNumQuadsDrawn;
+  uint32_t mNumCirclesDrawn;
   const glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
                                         {0.5f, -0.5f, 0.0f, 1.0f},
                                         {0.5f, 0.5f, 0.0f, 1.0f},
