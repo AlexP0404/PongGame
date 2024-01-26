@@ -51,7 +51,6 @@ bool TextureSDL::loadFromRenderedText(std::string textureText,
                                       SDL_Color textColor, TTF_Font *gFont) {
   // Get rid of preexisting texture
   free();
-
   // Render text surface
   SDL_Surface *textSurface =
       TTF_RenderText_Solid(gFont, textureText.c_str(), textColor);

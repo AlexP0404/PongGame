@@ -14,6 +14,7 @@ layout(location = 0) out vec4 outColor;
 void main(){
   float distance = 1.0 - length(Input.LocalPosition);
   float circle = smoothstep(0,Input.Radius,distance);
+  circle *= smoothstep(Input.Radius,0.001+Input.Radius, distance);
   //float circle = smoothstep(0,0.005,distance);
   if(circle == 0.0) discard;
 

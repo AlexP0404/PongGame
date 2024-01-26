@@ -86,7 +86,7 @@ void EngineVLK::eraseTextures(
 void EngineVLK::eraseTexture(const std::string &&textureName) {}
 
 void EngineVLK::drawNet() {
-  const float netRadius = 0.8f;
+  const float netRadius = 1.0f;
   for (int i = 0; i < m_ScreenHeight; i += 4) {
     mpRenderer->DrawCircle({m_ScreenWidth / 2, i}, netRadius, glm::vec3(1.0f),
                            mNumEntities++);

@@ -6,10 +6,8 @@
 
 #include <array>
 #include <cassert>
-#include <cstdint>
 #include <fstream>
 #include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 VulkanRenderData::VulkanRenderData() {
   mCurrentFrame = 0;

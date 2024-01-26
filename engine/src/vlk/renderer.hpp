@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <unordered_map>
 
 #include "circleVertex.hpp"
 #include "textureVLK.hpp"
@@ -34,16 +35,6 @@ public:
   void DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
                 const glm::vec3 &pColor, const uint32_t pQuadID);
 
-  void DrawQuad(const glm::vec3 &pPosition, const glm::vec2 &pSize,
-                const glm::vec3 &pColor);
-
-  void DrawQuad(const glm::mat4 &pTransform, const glm::vec3 &pColor);
-
-  // texture drawing
-  void DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
-                const textureVLK &pTexture, float pTilingFactor = 1.0f,
-                const glm::vec4 pTintColor = glm::vec4(1.0f));
-
   void Flush();
   void BeginBatch();
 
@@ -52,6 +43,16 @@ private:
   std::shared_ptr<WindowVLK> mWindowVLK;
   VulkanRenderData mVLKData;
   bool mFrameBufferResized;
+  bool mNewCircleAdded;
+  bool mNewQuadAdded;
+  uint32_t mNumQuadsDrawn;
+  uint32_t mNumCirclesDrawn;
+  static constexpr glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
+                                                   {0.5f, -0.5f, 0.0f, 1.0f},
+                                                   {0.5f, 0.5f, 0.0f, 1.0f},
+                                                   {-0.5f, 0.5f, 0.0f, 1.0f}};
+
+  std::unordered_map<std::string, textureVLK> mTextures;
 
   static const glm::vec2 convertPosition(const glm::vec2 &pPosition);
   static const glm::vec2 convertSize(const glm::vec2 &pSize);
@@ -63,14 +64,6 @@ private:
                                                   const float pRadius,
                                                   const glm::vec3 &pColor,
                                                   const uint32_t pCircleID);
-  bool mNewCircleAdded;
-  bool mNewQuadAdded;
-  uint32_t mNumQuadsDrawn;
-  uint32_t mNumCirclesDrawn;
-  static constexpr glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
-                                                   {0.5f, -0.5f, 0.0f, 1.0f},
-                                                   {0.5f, 0.5f, 0.0f, 1.0f},
-                                                   {-0.5f, 0.5f, 0.0f, 1.0f}};
 
   void EndBatch();
 };

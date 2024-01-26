@@ -3,7 +3,6 @@
 #include "vertex.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
-/* #include <glm/gtc/type_ptr.hpp> */
 
 static glm::vec2 sWinDimensions;
 
@@ -153,31 +152,8 @@ void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
                                 quad.begin(), quad.end());
   mNumQuadsDrawn++;
   mNewQuadAdded = true;
-  /* mVLKData.initNewEntity(); // rebuild swapchain with new vertex data */
   // add quad vertices to the vertices vector
 }
-
-void Renderer::DrawQuad(const glm::vec3 &pPosition, const glm::vec2 &pSize,
-                        const glm::vec3 &pColor) {
-  glm::mat4 transform = glm::translate(glm::mat4(1.0f), pPosition) *
-                        glm::scale(glm::mat4(1.0f), {pSize.x, pSize.y, 1.0f});
-  DrawQuad(transform, pColor);
-}
-
-void Renderer::DrawQuad(const glm::mat4 &pTransform, const glm::vec3 &pColor) {
-  constexpr size_t quadVertexCount = 4;
-  for (size_t i = 0; i < quadVertexCount; i++) {
-    Vertex v;
-    v.pos = pTransform * QUAD_VERTEX_POS[i];
-    v.color = pColor;
-    mVLKData.mQuadVertices.push_back(v);
-    mNumQuadsDrawn++;
-  }
-}
-
-void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
-                        const textureVLK &pTexture, float pTilingFactor,
-                        const glm::vec4 pTintColor) {}
 
 void Renderer::renderScreen() {
   if (mNewCircleAdded) {
@@ -191,6 +167,9 @@ void Renderer::renderScreen() {
 
   Flush();
   mVLKData.drawFrame(mFrameBufferResized); // should only need to resize once
+  if (mFrameBufferResized)                 // update window dimensions
+    sWinDimensions = {mVLKInit->mSwapChainExtent.width,
+                      mVLKInit->mSwapChainExtent.height};
 }
 
 void Renderer::Flush() {
