@@ -354,9 +354,9 @@ void GameLoop::loop() {
         std::cout << sb.getScoreString() << '\n';
 #endif
       }
-      gameEngine.drawNet();
       gameEngine.drawPaddles(p1.getPosX(), p1.getPosY(), p2.getPosX(),
                              p2.getPosY());
+      gameEngine.drawNet();
       gameEngine.drawDot(dot.getPosX(), dot.getPosY(), DOT_RADIUS);
     }
     /* gameEngine.clearScreen(); */

@@ -17,6 +17,8 @@ Renderer::Renderer(std::shared_ptr<WindowVLK> pWindow,
 
   mVLKData.initRenderData(mVLKInit);
   mFrameBufferResized = false;
+  mNewCircleAdded = false;
+  mNewQuadAdded = false;
   mNumQuadsDrawn = 0;
   mNumCirclesDrawn = 0;
 }
@@ -63,7 +65,8 @@ void Renderer::DrawCircle(const glm::vec2 &pPosition, const float pRadius,
                                       firstVertexIndex,
                                   circleQuad.begin(), circleQuad.end());
   // add circle to the list
-  mVLKData.initNewEntity(true);
+  /* mVLKData.initNewEntity(true); */
+  mNewCircleAdded = true;
   mNumCirclesDrawn++;
 }
 
@@ -149,7 +152,8 @@ void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
   mVLKData.mQuadVertices.insert(mVLKData.mQuadVertices.begin() + (pQuadID * 4),
                                 quad.begin(), quad.end());
   mNumQuadsDrawn++;
-  mVLKData.initNewEntity(); // rebuild swapchain with new vertex data
+  mNewQuadAdded = true;
+  /* mVLKData.initNewEntity(); // rebuild swapchain with new vertex data */
   // add quad vertices to the vertices vector
 }
 
@@ -176,9 +180,17 @@ void Renderer::DrawQuad(const glm::vec2 &pPosition, const glm::vec2 &pSize,
                         const glm::vec4 pTintColor) {}
 
 void Renderer::renderScreen() {
+  if (mNewCircleAdded) {
+    mVLKData.initNewEntity(true);
+    mNewCircleAdded = false;
+  }
+  if (mNewQuadAdded) {
+    mVLKData.initNewEntity(false);
+    mNewQuadAdded = false;
+  }
+
   Flush();
   mVLKData.drawFrame(mFrameBufferResized); // should only need to resize once
-  /* BeginBatch(); */
 }
 
 void Renderer::Flush() {
@@ -186,10 +198,7 @@ void Renderer::Flush() {
 }
 
 void Renderer::BeginBatch() {
-  mVLKData.mQuadVertices.clear();
-  mVLKData.mCircleVertices.clear();
   mNumQuadsDrawn = 0;
   mNumCirclesDrawn = 0;
-  mVLKData.mQuadVertices.resize(mVLKData.MAX_VERTEX_COUNT);
-  mVLKData.mCircleVertices.resize(mVLKData.MAX_VERTEX_COUNT);
+  mVLKData.clearVertices();
 }

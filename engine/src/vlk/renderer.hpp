@@ -63,7 +63,8 @@ private:
                                                   const float pRadius,
                                                   const glm::vec3 &pColor,
                                                   const uint32_t pCircleID);
-
+  bool mNewCircleAdded;
+  bool mNewQuadAdded;
   uint32_t mNumQuadsDrawn;
   uint32_t mNumCirclesDrawn;
   static constexpr glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},

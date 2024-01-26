@@ -1074,10 +1074,18 @@ void VulkanRenderData::drawIndexed(uint32_t pNumQuadsToDraw /*=0*/,
   mNumCirclesIndicesToDraw = pNumCircsToDraw * 6;
 }
 
-void VulkanRenderData::insertQuad(const std::array<Vertex, 4> &pVertices) {}
+void VulkanRenderData::insertQuad(const std::array<Vertex, 4> &pVertices,
+                                  const uint32_t pQuadNum) {}
 
 void VulkanRenderData::insertCircle(
-    const std::array<CircleVertex, 4> &pVertices) {}
+    const std::array<CircleVertex, 4> &pVertices, const uint32_t pCircleNum) {}
+
+void VulkanRenderData::clearVertices() {
+  mQuadVertices.clear();
+  mCircleVertices.clear();
+  mQuadVertices.resize(MAX_VERTEX_COUNT);
+  mCircleVertices.resize(MAX_VERTEX_COUNT);
+}
 
 void VulkanRenderData::recreateSwapchain() {
   // NOTE:This may cause issues because the swapchain is being destroyed and
