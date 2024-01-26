@@ -26,6 +26,9 @@ public:
   void initNewEntity(bool pIsCircle = false);
   void drawIndexed(uint32_t pNumQuadsToDraw = 0, uint32_t pNumCircsToDraw = 0);
 
+  void insertQuad(const std::array<Vertex, 4> &pVertices);
+  void insertCircle(const std::array<CircleVertex, 4> &pVertices);
+
   const int MAX_FRAMES_IN_FLIGHT = 2;
   const int MAX_QUAD_COUNT = 400;
   const int MAX_VERTEX_COUNT = MAX_QUAD_COUNT * 4;

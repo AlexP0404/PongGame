@@ -4,6 +4,7 @@
 #include "utils.hpp"
 #include "vertex.hpp"
 
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <fstream>
@@ -1072,6 +1073,11 @@ void VulkanRenderData::drawIndexed(uint32_t pNumQuadsToDraw /*=0*/,
   mNumQuadIndicesToDraw = pNumQuadsToDraw * 6; // 6 indicies per quad
   mNumCirclesIndicesToDraw = pNumCircsToDraw * 6;
 }
+
+void VulkanRenderData::insertQuad(const std::array<Vertex, 4> &pVertices) {}
+
+void VulkanRenderData::insertCircle(
+    const std::array<CircleVertex, 4> &pVertices) {}
 
 void VulkanRenderData::recreateSwapchain() {
   // NOTE:This may cause issues because the swapchain is being destroyed and

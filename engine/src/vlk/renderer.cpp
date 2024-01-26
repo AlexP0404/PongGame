@@ -1,8 +1,7 @@
 #include "renderer.hpp"
+#include "circleVertex.hpp"
 #include "vertex.hpp"
 
-#include <cstdint>
-#include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 /* #include <glm/gtc/type_ptr.hpp> */
 
@@ -47,7 +46,8 @@ void Renderer::DrawCircle(const glm::vec2 &pPosition, const float pRadius,
   // then pass to render data
   //
   // rn, simple heuristic to always draw circles after quads making easy lookup
-  if (mVLKData.mCircleVertices.at(pCircleID - mNumQuadsDrawn).color == pColor) {
+  size_t firstVertexIndex = (pCircleID - mNumQuadsDrawn) * 4;
+  if (mVLKData.mCircleVertices.at(firstVertexIndex).color == pColor) {
     mVLKData.updateEntityPos(pCircleID, convertPosition(pPosition));
     return;
   }
@@ -55,20 +55,51 @@ void Renderer::DrawCircle(const glm::vec2 &pPosition, const float pRadius,
     Flush();
     BeginBatch();
   }
-  for (size_t i = 0; i < 4; i++) {
-    CircleVertex circ = {};
-    circ.worldPos = convertPosition(pPosition);
-    circ.localPos = {QUAD_VERTEX_POS[i].x * 2.0f, QUAD_VERTEX_POS[i].y * 2.0f};
-    circ.radius = convertSize(glm::vec2(pRadius)).y;
-    circ.color = pColor;
-    circ.entityID = pCircleID;
 
-    mVLKData.mCircleVertices.insert(
-        mVLKData.mCircleVertices.begin() + mNumCirclesDrawn + i, circ);
-    // add circle to the list
-  }
+  auto circleQuad =
+      CreateCircle(convertPosition(pPosition),
+                   convertSize(glm::vec2(pRadius)).y * 2.0f, pColor, pCircleID);
+  mVLKData.mCircleVertices.insert(mVLKData.mCircleVertices.begin() +
+                                      firstVertexIndex,
+                                  circleQuad.begin(), circleQuad.end());
+  // add circle to the list
   mVLKData.initNewEntity(true);
   mNumCirclesDrawn++;
+}
+
+std::array<CircleVertex, 4> Renderer::CreateCircle(const glm::vec2 &pPosition,
+                                                   const float pRadius,
+                                                   const glm::vec3 &pColor,
+                                                   const uint32_t pCircleID) {
+  CircleVertex v0;
+  v0.worldPos = pPosition;
+  v0.localPos = {QUAD_VERTEX_POS[0].x * 2.0f, QUAD_VERTEX_POS[0].y * 2.0f};
+  v0.radius = pRadius;
+  v0.color = pColor;
+  v0.entityID = pCircleID;
+
+  CircleVertex v1;
+  v1.worldPos = {pPosition.x + pRadius, pPosition.y};
+  v1.localPos = {QUAD_VERTEX_POS[1].x * 2.0f, QUAD_VERTEX_POS[1].y * 2.0f};
+  v1.radius = pRadius;
+  v1.color = pColor;
+  v1.entityID = pCircleID;
+
+  CircleVertex v2;
+  v2.worldPos = {pPosition.x + pRadius, pPosition.y + pRadius};
+  v2.localPos = {QUAD_VERTEX_POS[2].x * 2.0f, QUAD_VERTEX_POS[2].y * 2.0f};
+  v2.radius = pRadius;
+  v2.color = pColor;
+  v2.entityID = pCircleID;
+
+  CircleVertex v3;
+  v3.worldPos = {pPosition.x, pPosition.y + pRadius};
+  v3.localPos = {QUAD_VERTEX_POS[3].x * 2.0f, QUAD_VERTEX_POS[3].y * 2.0f};
+  v3.radius = pRadius;
+  v3.color = pColor;
+  v3.entityID = pCircleID;
+
+  return {v0, v1, v2, v3};
 }
 
 std::array<Vertex, 4> Renderer::CreateQuad(const glm::vec2 &pPosition,

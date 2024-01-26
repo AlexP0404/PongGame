@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 
+#include "circleVertex.hpp"
 #include "textureVLK.hpp"
 #include "vertex.hpp"
 #include "vulkanInit.hpp"
@@ -58,13 +59,17 @@ private:
                                           const glm::vec2 &pSize,
                                           const glm::vec3 &pColor,
                                           const uint32_t pQuadID);
+  static std::array<CircleVertex, 4> CreateCircle(const glm::vec2 &pPosition,
+                                                  const float pRadius,
+                                                  const glm::vec3 &pColor,
+                                                  const uint32_t pCircleID);
 
   uint32_t mNumQuadsDrawn;
   uint32_t mNumCirclesDrawn;
-  const glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
-                                        {0.5f, -0.5f, 0.0f, 1.0f},
-                                        {0.5f, 0.5f, 0.0f, 1.0f},
-                                        {-0.5f, 0.5f, 0.0f, 1.0f}};
+  static constexpr glm::vec4 QUAD_VERTEX_POS[4] = {{-0.5f, -0.5f, 0.0f, 1.0f},
+                                                   {0.5f, -0.5f, 0.0f, 1.0f},
+                                                   {0.5f, 0.5f, 0.0f, 1.0f},
+                                                   {-0.5f, 0.5f, 0.0f, 1.0f}};
 
   void EndBatch();
 };
